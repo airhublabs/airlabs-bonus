@@ -46,3 +46,10 @@ model Report {
   employee    Employee @relation(fields: [employee_id], references: [id])
   employee_id Int
 }
+
+model DangerZones {
+  id Int @id @default(autoincrement())
+  zone String @unique
+  bonus_amount Float @default(25.5)
+  bonus_currency String @default("EUR")
+}
