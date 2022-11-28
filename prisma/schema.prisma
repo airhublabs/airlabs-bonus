@@ -47,7 +47,7 @@ model Report {
   employee_id Int
 }
 
-model DangerZones {
+model DangerZone {
   id Int @id @default(autoincrement())
   zone String @unique
   bonus_amount Float @default(25.5)

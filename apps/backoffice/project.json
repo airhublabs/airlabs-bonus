@@ -1,0 +1,55 @@
+{
+  "name": "backoffice",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/backoffice",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "root": "apps/backoffice",
+        "outputPath": "dist/apps/backoffice"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/backoffice"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "backoffice:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "backoffice:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "backoffice:build:production",
+          "dev": false
+        }
+      }
+    },
+    "export": {
+      "executor": "@nrwl/next:export",
+      "options": {
+        "buildTarget": "backoffice:build:production"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/backoffice/**/*.{ts,tsx,js,jsx}"]
+      }
+    }
+  },
+  "tags": []
+}
