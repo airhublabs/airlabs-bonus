@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmployeeType {
+  PILOT
+  ATTENDANT
+}
+
+model Employee {
+  id                       Int          @id @default(autoincrement())
+  type                     EmployeeType @default(ATTENDANT)
+  emp_no                   String
+  homebase                 String
+  human_resource_full_name String
+  human_resource_brq       String
+  human_resource_rank      String
+  Report                   Report[]
+}
+
+model Report {
+  id                       Int      @id @default(autoincrement())
+  start_date               DateTime
+  from_date                DateTime
+  to_date                  DateTime
+  dep_string               String
+  arr_string               String
+  code                     String   @default("N/A")
+  scheduled_hours_duration String
+  registration             String?
+  vehicle_type             String?
+  roster_designators       String?
+  project_name_text        String?
+
+  // bonus_eligible           Boolean  @default(false)
+  // bonus_amount             Float?
+
+  employee    Employee @relation(fields: [employee_id], references: [id])
+  employee_id Int
+}
