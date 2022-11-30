@@ -1,5 +1,6 @@
-import { parseStringDurationInMilli } from '../../../common/helpers/time.helper';
+import { parseStringDurationInMilli } from '@airlabs-bonus/utils';
 
+/* TODO: Is this going to be needed */
 abstract class IBonusProvider {
   bonusRate!: number;
   currency!: string;

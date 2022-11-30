@@ -43,6 +43,7 @@ const EmployeeView = (props) => {
   const reportsQuery = useListReports({ employeeId: +employeeId, month: viewingMonth });
 
   const columns: GridColDef[] = [
+    { field: 'id', headerName: 'ID', width: 90 },
     { field: 'code', headerName: 'Code', width: 90 },
     {
       field: 'from_date',
@@ -50,8 +51,8 @@ const EmployeeView = (props) => {
       valueFormatter: (params) => stringifyISO(params.value),
     },
     { field: 'to_date', headerName: 'To', valueFormatter: (params) => stringifyISO(params.value) },
-    { field: 'arr_string', headerName: 'Arrival', width: 90 },
     { field: 'dep_string', headerName: 'Departure', width: 90 },
+    { field: 'arr_string', headerName: 'Arrival', width: 90 },
     { field: 'scheduled_hours_duration', headerName: 'Duration' },
     { field: 'vehicle_type', headerName: 'Veh' },
   ];
@@ -64,7 +65,11 @@ const EmployeeView = (props) => {
     <>
       <div className="data-grid-wrap">
         <MonthSelect onChange={handleChangeEvent} key="month" />
-        <DataGrid rows={reportsQuery?.data || []} columns={columns} loading={reportsQuery.isLoading} />
+        <DataGrid
+          rows={reportsQuery?.data || []}
+          columns={columns}
+          loading={reportsQuery.isLoading}
+        />
       </div>
 
       <style jsx>{`

@@ -41,6 +41,7 @@ export class ReportsService {
       where: {
         ...params?.filter,
       },
+      include: {employee: true}
     });
 
     return reports;
