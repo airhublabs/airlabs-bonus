@@ -1,0 +1,4 @@
+{
+	"cssvar.files": ["./apps/backoffice/lib/styles/root.scss"],
+	"html-css-class-completion.includeGlobPattern": "apps/backoffice/src/lib/styles/global.css"
+}

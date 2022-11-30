@@ -18,7 +18,7 @@ enum EmployeeType {
 model Employee {
   id                       Int          @id @default(autoincrement())
   type                     EmployeeType @default(ATTENDANT)
-  emp_no                   String
+  emp_no                   String @unique
   homebase                 String
   human_resource_full_name String
   human_resource_brq       String
@@ -47,7 +47,7 @@ model Report {
   employee_id Int
 }
 
-model DangerZones {
+model DangerZone {
   id Int @id @default(autoincrement())
   zone String @unique
   bonus_amount Float @default(25.5)

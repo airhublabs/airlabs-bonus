@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { DateTime } from 'luxon';
 import { ApiError } from '../../common/errors/api.error';
 import { PrismaService } from '../../common/services/prisma.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { ReportCreatorService } from './services/report-creator.service';
+
+interface ListParams {
+  filter?: Prisma.ReportWhereInput;
+}
 
 @Injectable()
 export class ReportsService {
@@ -30,8 +36,12 @@ export class ReportsService {
     return report;
   }
 
-  async list() {
-    const reports = await this.prisma.report.findMany({});
+  async list(params?: ListParams) {
+    const reports = await this.prisma.report.findMany({
+      where: {
+        ...params?.filter,
+      },
+    });
 
     return reports;
   }
