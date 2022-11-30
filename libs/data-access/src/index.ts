@@ -1,1 +1,1 @@
-export * from './lib/data-access';
+export { AirlabsApi } from './lib/access';

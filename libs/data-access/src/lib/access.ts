@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Employees } from './modules/employees.access';
+import { Reports } from './modules/reports.access';
 import { filterEmptyKeys } from './utils/object.utils';
 
 const DEFAULT_HOST = 'https://localhost:5000';
@@ -81,13 +82,14 @@ export class Request {
   }
 }
 
-export class TuesdayApi {
+export class AirlabsApi {
   public employees: Employees;
-
+  public reports: Reports;
 
   constructor(public params?: Partial<RequestParams>) {
     const request = new Request(params);
 
     this.employees = new Employees(request);
+    this.reports = new Reports(request);
   }
 }

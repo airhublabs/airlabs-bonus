@@ -5,34 +5,34 @@ export class Employees {
   constructor(private request: Request) {}
 
   async list() {
-    const response = await this.request.get<EmployeesApi.ListResponseBody>('/boards');
+    const response = await this.request.get<EmployeesApi.ListResponseBody>('/employees');
 
     return response;
   }
 
-  async retrive(boardId: number) {
-    const response = await this.request.get<EmployeesApi.RetriveResponseBody>(`/boards/${boardId}`);
+  async retrive(employeeId: number) {
+    const response = await this.request.get<EmployeesApi.RetriveResponseBody>(`/employees/${employeeId}`);
 
     return response;
   }
 
   async create(data: EmployeesApi.CreateData) {
-    const response = await this.request.post<EmployeesApi.CreateResponse>('/boards', data);
+    const response = await this.request.post<EmployeesApi.CreateResponse>('/employees', data);
 
     return response;
   }
 
-  async update(boardId: number, data: EmployeesApi.UpdateResponse) {
+  async update(employeeId: number, data: EmployeesApi.UpdateResponse) {
     const response = await this.request.patch<EmployeesApi.UpdateResponse>(
-      `/boards/${boardId}`,
+      `/employees/${employeeId}`,
       data
     );
 
     return response;
   }
 
-  async delete(boardId: number) {
-    const response = await this.request.delete<EmployeesApi.DeleteResponse>(`/boards/${boardId}`);
+  async delete(employeeId: number) {
+    const response = await this.request.delete<EmployeesApi.DeleteResponse>(`/employees/${employeeId}`);
 
     return response;
   }

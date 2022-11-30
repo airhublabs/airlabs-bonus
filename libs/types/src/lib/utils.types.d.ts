@@ -4,6 +4,10 @@ import type { operations } from './schema';
 export type SchemaResponseBody<T extends keyof operations> =
   operations[T]['responses']['200']['content']['application/json'];
 
+  /**Shortcut to get Swagger schema response body */
+export type SchemaQuery<T extends keyof operations> =
+  operations[T]['parameters']['query'];
+
 /** Shortcut to get Swagger created(201) response body */
 export type SchemaCreateResponseBody<T extends keyof operations> =
   operations[T]['responses']['201']['content']['application/json'];
