@@ -18,7 +18,7 @@ export class CreateReportDto implements OmitCreateDtoFields<Report> {
 
   @IsString()
   @IsOptional()
-  code = 'N/A';
+  code!: string;
 
   @IsString()
   @IsOptional()

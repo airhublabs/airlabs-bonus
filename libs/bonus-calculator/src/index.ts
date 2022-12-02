@@ -1,7 +1,6 @@
-import { Employee, Report } from '@prisma/client';
-import { DateTime } from 'luxon';
 import { BonusCalculatorService } from './lib/bonus-calculator.service';
-import { MOCK_EMPLOYEE, MOCK_REPORTS } from './lib/mock-data.constant';
+import { CASE_1_REPORT, CASE_2_REPORTS, MOCK_EMPLOYEE } from './lib/mock-data.constant';
+export { BonusCalculatorService } from './lib/bonus-calculator.service';
 
 /* export const MOCK_DATA: MockDataType = [
   {
@@ -66,6 +65,11 @@ import { MOCK_EMPLOYEE, MOCK_REPORTS } from './lib/mock-data.constant';
   },
 ]; */
 
-const bonus = new BonusCalculatorService({ reports: MOCK_REPORTS, employee: MOCK_EMPLOYEE, hazardPayRate: 25.5 });
+// const bonus = new BonusCalculatorService({
+//   reports: CASE_2_REPORTS,
+//   employee: MOCK_EMPLOYEE,
+//   hazardPayRate: 25.5,
+// });
 
-console.log(bonus.getEligbleBonusHours());
+// console.log(bonus.getEligbleBonusHours());
+// console.log(CASE_2_REPORTS)

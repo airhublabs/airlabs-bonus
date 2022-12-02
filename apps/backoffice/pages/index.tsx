@@ -1,17 +1,5 @@
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { useQuery } from '@tanstack/react-query';
-import api from '../lib/api/airlabs.api';
-import { QUERY_KEY } from '../lib/constants/query-key.constant';
-
-const useListEmployees = () => {
-  const employeeQuery = useQuery({
-    queryKey: QUERY_KEY.listEmployees,
-    queryFn: async () => (await api.employees.list()).data,
-    onSuccess: console.log,
-  });
-
-  return employeeQuery;
-};
+import { useListEmployees } from '../lib/api/employees/employees.query';
 
 export function Index() {
   const employeesQuery = useListEmployees();
