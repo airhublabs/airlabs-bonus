@@ -19,27 +19,38 @@ export interface BonusServiceParams {
 }
 
 /* TODO: Switch to dynamic danger zones */
-const DANGER_ZONES = ['ERBL', 'SNGL3', 'SNGL4'];
+const DANGER_ZONES = ['ERBL', 'SNGL3', 'SNGL4', 'DSS', 'EBL'];
 
-export class BonusCalculatorService {
-  constructor(private readonly params: BonusServiceParams) {}
+export class BonusCalculatorServiceV2 {
+  public dangerousProjectIds!: number[];
 
-  hasLeftHomebase(report: ReportsApi.RetriveResponseBody): boolean {
+  constructor(private readonly params: BonusServiceParams) {
+    this.dangerousProjectIds = [];
+  }
+
+  isLeavingHomebase(report: ReportsApi.RetriveResponseBody): boolean {
     return (
       report.dep_string === this.params.employee.homebase &&
       report.arr_string !== this.params.employee.homebase
     );
   }
 
-  hasArrivedAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
+  isArrivingAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
     return (
-      report.arr_string === this.params.employee.homebase &&
-      report.dep_string !== this.params.employee.homebase
+      report.dep_string !== this.params.employee.homebase &&
+      report.arr_string === this.params.employee.homebase
+    );
+  }
+
+  isDangerousProject(report: ReportsApi.RetriveResponseBody): boolean {
+    return (
+      (DANGER_ZONES.includes(report.code) || DANGER_ZONES.includes(report.arr_string)) &&
+      !this.isEndOfProjectInMiddleMonth({ report })
     );
   }
 
   isEndOfProjectInMiddleMonth(params: { report: ReportsApi.RetriveResponseBody }) {
-    return DANGER_ZONES.includes(params.report.code) && this.hasArrivedAtHomebase(params.report);
+    return DANGER_ZONES.includes(params.report.code) && this.isArrivingAtHomebase(params.report);
   }
 
   getEligbleBonusHours(): number {
@@ -49,7 +60,7 @@ export class BonusCalculatorService {
 
     return this.params.reports.reduce((amount, report, i) => {
       /* Danger code detected */
-      if (DANGER_ZONES.includes(report.code) && !this.isEndOfProjectInMiddleMonth({ report })) {
+      if (this.isDangerousProject(report)) {
         isAssignedDangerousProject = true;
         dangerousCode = report.code;
         console.debug('Assigned hazard -', { code: report.code, date: report.start_date });
@@ -57,7 +68,7 @@ export class BonusCalculatorService {
 
       /* Has left homebase with assigned dangerous project. */
       if (
-        this.hasLeftHomebase(report) &&
+        this.isLeavingHomebase(report) &&
         isAssignedDangerousProject &&
         !dangerousProjectStartDate
       ) {
@@ -65,9 +76,13 @@ export class BonusCalculatorService {
         console.debug('Left homebase -', { date: report.start_date });
       }
 
-      /* Arrived at homebase with assigned danergous project. Signifes end of project */
+      if (isAssignedDangerousProject && dangerousProjectStartDate) {
+        this.dangerousProjectIds.push(report.id);
+      }
+
+      /* Arrived at homebase with assigned dangerous project. Signifies end of project */
       if (
-        this.hasArrivedAtHomebase(report) &&
+        this.isArrivingAtHomebase(report) &&
         isAssignedDangerousProject &&
         dangerousProjectStartDate
       ) {
@@ -77,14 +92,13 @@ export class BonusCalculatorService {
         ).days;
 
         amount += bonusPayDays;
+        isAssignedDangerousProject = false;
+        dangerousProjectStartDate = undefined;
         console.debug('Arrived at homebase -', {
           date: report.start_date,
           code: report.code,
           days: bonusPayDays,
         });
-
-        isAssignedDangerousProject = false;
-        dangerousProjectStartDate = undefined;
       }
 
       /* End of a dangerous project with no start date in the current month */
@@ -133,7 +147,7 @@ export class BonusCalculatorService {
   }
 }
 
-export class BonusCalculatorServiceV2 {
+export class BonusCalculatorService {
   constructor(private readonly params: BonusServiceParams) {}
 
   hasLeftHomebase(report: ReportsApi.RetriveResponseBody): boolean {
@@ -145,15 +159,8 @@ export class BonusCalculatorServiceV2 {
 
   hasArrivedAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
     return (
-      report.dep_string !== this.params.employee.homebase &&
-      report.arr_string === this.params.employee.homebase
-    );
-  }
-
-  hasBeenAssignedDangerousProject(report: ReportsApi.RetriveResponseBody): boolean {
-    return (
-      (DANGER_ZONES.includes(report.code) || DANGER_ZONES.includes(report.dep_string)) &&
-      !this.isEndOfProjectInMiddleMonth({ report })
+      report.arr_string === this.params.employee.homebase &&
+      report.dep_string !== this.params.employee.homebase
     );
   }
 
@@ -168,7 +175,7 @@ export class BonusCalculatorServiceV2 {
 
     return this.params.reports.reduce((amount, report, i) => {
       /* Danger code detected */
-      if (this.hasBeenAssignedDangerousProject(report)) {
+      if (DANGER_ZONES.includes(report.code) && !this.isEndOfProjectInMiddleMonth({ report })) {
         isAssignedDangerousProject = true;
         dangerousCode = report.code;
         console.debug('Assigned hazard -', { code: report.code, date: report.start_date });

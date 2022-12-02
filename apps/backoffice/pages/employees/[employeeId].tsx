@@ -2,7 +2,7 @@ import { BonusCalculatorService } from '@airlabs-bonus/bonus-calculator';
 import { ReportsApi } from '@airlabs-bonus/types';
 import { Button } from '@mui/material';
 import { Stack } from '@mui/system';
-import { DataGrid, GridEventListener, GridToolbarExport } from '@mui/x-data-grid';
+import { DataGrid, GridEventListener, GridToolbar, GridToolbarExport } from '@mui/x-data-grid';
 import api from 'apps/backoffice/lib/api/airlabs.api';
 import { useRetriveEmployee } from 'apps/backoffice/lib/api/employees/employees.query';
 import { useListReports } from 'apps/backoffice/lib/api/reports/reports.query';
@@ -12,21 +12,24 @@ import { EMPLOYEE_COLUMNS } from 'apps/backoffice/lib/views/employees/constants/
 import EmployeeViewHeader from 'apps/backoffice/lib/views/employees/EmployeeViewHeader';
 import ReportDialog from 'apps/backoffice/lib/views/employees/modals/ReportDialog';
 import MonthSelect, { MonthSelectProps } from 'apps/backoffice/lib/views/employees/MonthSelect';
+import { BonusCalculatorServiceV2 } from 'libs/bonus-calculator/src/lib/bonus-calculator.service';
 import { DateTime } from 'luxon';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 const EmployeeView = () => {
   const { employeeId } = useRouter().query;
-  const [bonusData, setBonusData] = useState({ amount: 0, days: 0 });
+  const [bonusData, setBonusData] = useState({ amount: 0, days: 0, dangerousProjectIds: [] });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [viewingMonth, setViewingMonth] = useState<number>();
+
   const reportsQuery = useListReports({ employeeId: +employeeId, month: viewingMonth });
   const employeeQuery = useRetriveEmployee(+employeeId);
 
-  const handleCellEditCommit: GridEventListener<'cellEditCommit'> = async (params) => {
+  const handleUpdateCellData: GridEventListener<'cellEditCommit'> = async (params) => {
     try {
-      const response = await api.reports.update(+params.id, { [params.field]: params.value });
+      await api.reports.update(+params.id, { [params.field]: params.value });
+      reportsQuery.refetch();
     } catch (error) {
       console.error(error);
     }
@@ -36,7 +39,7 @@ const EmployeeView = () => {
     setViewingMonth(params.value);
   };
 
-  const removeRedudentdateFromReports = (reports: ReportsApi.ListResponseBody) => {
+  const removeRedundantDateFromReports = (reports: ReportsApi.ListResponseBody) => {
     if (!reports) return;
     let intitalReportDate: string | undefined = undefined;
 
@@ -54,14 +57,21 @@ const EmployeeView = () => {
   useEffect(() => {
     if (!reportsQuery.isSuccess || !employeeQuery.isSuccess) return;
 
-    /* TODO: Fix type error */
-    const bonus = new BonusCalculatorService({
+    const bonus = new BonusCalculatorServiceV2({
       reports: reportsQuery.data,
       employee: employeeQuery.data,
       hazardPayRate: 25.5,
     });
 
-    setBonusData({ days: bonus.getEligbleBonusHours(), amount: bonus.getMonthsBothPay() });
+    const bonusDays = bonus.getEligbleBonusHours();
+
+    console.log(bonus.dangerousProjectIds);
+
+    setBonusData({
+      days: bonusDays,
+      amount: bonus.getMonthsBothPay(),
+      dangerousProjectIds: bonus.dangerousProjectIds,
+    });
   }, [
     employeeQuery.data,
     reportsQuery.isFetching,
@@ -108,8 +118,7 @@ const EmployeeView = () => {
 
         <div className="data-grid-wrap">
           <DataGrid
-            rows={removeRedudentdateFromReports(reportsQuery?.data) || []}
-            onCellEditCommit={handleCellEditCommit}
+            rows={removeRedundantDateFromReports(reportsQuery?.data) || []}
             columns={EMPLOYEE_COLUMNS}
             loading={reportsQuery.isLoading}
             density="compact"
@@ -117,6 +126,10 @@ const EmployeeView = () => {
             components={{
               Toolbar: ExportToolbar,
             }}
+            getRowClassName={(params) =>
+              `${bonusData.dangerousProjectIds.includes(params.row.id) ? 'danger' : ''}`
+            }
+            onCellEditCommit={handleUpdateCellData}
           />
         </div>
       </main>
@@ -136,10 +149,19 @@ const EmployeeView = () => {
           flex-direction: column;
           gap: var(--space-sm);
         }
+
         .data-grid-wrap {
           display: flex;
           height: 530px;
           width: 100%;
+
+          :global(.danger) {
+            background-color: rgba(255, 0, 0, 0.033);
+
+            &:hover {
+              background-color: rgba(255, 0, 0, 0.053);
+            }
+          }
         }
       `}</style>
     </>
