@@ -4,6 +4,9 @@
  */
 
 export interface paths {
+  "/": {
+    get: operations["AppController_getData"];
+  };
   "/v1": {
     get: operations["AppController_getData"];
   };
@@ -38,12 +41,15 @@ export interface components {
       human_resource_full_name: string;
       human_resource_brq: string;
       human_resource_rank: string;
+      /** @enum {string} */
+      type?: "PILOT" | "ATTENDANT";
     };
     UpdateEmployeeDto: { [key: string]: unknown };
     CreateReportDto: {
       start_date: string;
       from_date: string;
       to_date: string;
+      code?: string;
       registration: string;
       dep_string: string;
       arr_string: string;
@@ -57,6 +63,8 @@ export interface components {
       human_resource_full_name: string;
       human_resource_brq: string;
       human_resource_rank: string;
+      /** @enum {string} */
+      type?: "PILOT" | "ATTENDANT";
       id: number;
     };
     ReportEntity: {
@@ -71,11 +79,13 @@ export interface components {
       project_name_text: string;
       id: number;
       employeee: components["schemas"]["EmployeeEntity"];
+      code: string;
     };
     UpdateReportDto: {
       start_date?: string;
       from_date?: string;
       to_date?: string;
+      code?: string;
       registration?: string;
       dep_string?: string;
       arr_string?: string;

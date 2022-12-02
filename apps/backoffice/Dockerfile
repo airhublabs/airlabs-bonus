@@ -16,6 +16,7 @@ COPY  /apps/backoffice ./apps/backoffice
 
 # COPY NEEDED PACKAGES
 COPY /libs/data-access ./libs/data-access
+COPY /libs/bonus-calculator ./libs/bonus-calculator
 COPY /libs/types ./libs/types
 COPY /libs/utils ./libs/utils
 

@@ -1,8 +1,4 @@
-import { Employee, Report } from '@prisma/client';
-
-function zeroPad(number: number) {
-  return number <= 9999 ? `000${number}`.slice(-2) : number;
-}
+import { zeroPad } from '@airlabs-bonus/utils';
 
 export const MOCK_EMPLOYEE = {
   id: 9,

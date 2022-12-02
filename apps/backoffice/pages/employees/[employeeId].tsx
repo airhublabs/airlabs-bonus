@@ -1,3 +1,4 @@
+import { BonusCalculatorService } from '@airlabs-bonus/bonus-calculator';
 import { ReportsApi } from '@airlabs-bonus/types';
 import { Button } from '@mui/material';
 import { Stack } from '@mui/system';
@@ -53,16 +54,14 @@ const EmployeeView = () => {
   useEffect(() => {
     if (!reportsQuery.isSuccess || !employeeQuery.isSuccess) return;
 
-    // /* TODO: Fix type error */
-    // const bonus = new BonusCalculatorService({
-    //   // @ts-ignore
-    //   reports: reportsQuery.data,
-    //   // @ts-ignore
-    //   employee: employeeQuery.data,
-    //   hazardPayRate: 25.5,
-    // });
+    /* TODO: Fix type error */
+    const bonus = new BonusCalculatorService({
+      reports: reportsQuery.data,
+      employee: employeeQuery.data,
+      hazardPayRate: 25.5,
+    });
 
-    // setBonusData({ days: bonus.getEligbleBonusHours(), amount: bonus.getMonthsBothPay() });
+    setBonusData({ days: bonus.getEligbleBonusHours(), amount: bonus.getMonthsBothPay() });
   }, [
     employeeQuery.data,
     reportsQuery.isFetching,
