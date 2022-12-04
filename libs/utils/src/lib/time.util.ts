@@ -15,8 +15,6 @@ export const parseStringDurationInMilli = (duration: string) => {
   const [hours, minutes, seconds] = duration.split(':');
   let milliseconds = 0;
 
-  console.log(hours);
-
   if (+hours) milliseconds += +hours * 3600000;
   if (+minutes) milliseconds += +minutes * 60000 ;
   if (+seconds) milliseconds += +seconds * 1000;

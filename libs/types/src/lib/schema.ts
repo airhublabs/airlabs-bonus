@@ -53,9 +53,10 @@ export interface components {
       registration: string;
       dep_string: string;
       arr_string: string;
-      vehicle_type: string;
-      roster_designators: string;
-      project_name_text: string;
+      vehicle_type?: string;
+      roster_designators?: string;
+      project_name_text?: string;
+      employee_id: number;
     };
     EmployeeEntity: {
       emp_no: string;
@@ -74,9 +75,10 @@ export interface components {
       registration: string;
       dep_string: string;
       arr_string: string;
-      vehicle_type: string;
-      roster_designators: string;
-      project_name_text: string;
+      vehicle_type?: string;
+      roster_designators?: string;
+      project_name_text?: string;
+      employee_id: number;
       id: number;
       employeee: components["schemas"]["EmployeeEntity"];
       code: string;

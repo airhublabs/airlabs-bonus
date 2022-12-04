@@ -36,7 +36,7 @@ export class CreateReportDto implements OmitCreateDtoFields<Report> {
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ type: String })
+  @ApiPropertyOptional({ type: String })
   vehicle_type!: string;
 
   @IsString()
@@ -45,14 +45,15 @@ export class CreateReportDto implements OmitCreateDtoFields<Report> {
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ type: String })
+  @ApiPropertyOptional({ type: String })
   roster_designators!: string;
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ type: String })
+  @ApiPropertyOptional({ type: String })
   project_name_text!: string;
 
   @IsNumber()
+  @ApiProperty()
   employee_id!: number;
 }

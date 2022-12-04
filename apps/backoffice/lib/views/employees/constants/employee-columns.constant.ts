@@ -37,4 +37,5 @@ export const EMPLOYEE_COLUMNS: GridColDef[] = [
     editable: true,
     description: 'Vehicle used for the project.',
   },
+  {field: "most_visited", headerName: "Most visited", description: "Most visted base in multi-project days"},
 ];

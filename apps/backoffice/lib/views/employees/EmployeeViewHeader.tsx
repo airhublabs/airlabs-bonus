@@ -18,7 +18,7 @@ const EmployeeViewHeader: FC<EmployeeViewHeaderProps> = ({
   return (
     <>
       <header>
-        <Stack direction="row" justifyContent="space-between" p={1}>
+        <Stack direction="row" justifyContent="space-between">
           <DataPoint label="Name" value={name} />
           <DataPoint label="EmpNo" value={employeeNumber} />
           <DataPoint label="Homebase" value={homebase} />
@@ -29,7 +29,6 @@ const EmployeeViewHeader: FC<EmployeeViewHeaderProps> = ({
       <style jsx>{`
         header {
           width: 100%;
-          background-color: var(--neutral-300);
         }
       `}</style>
     </>

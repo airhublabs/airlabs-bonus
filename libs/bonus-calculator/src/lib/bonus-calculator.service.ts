@@ -12,6 +12,10 @@ Questions that need calerfied
 - API endpoint for extracting bonus days to put into their system
 */
 
+/*
+What happens when
+*/
+
 export interface BonusServiceParams {
   reports: ReportsApi.ListResponseBody;
   employee: EmployeesApi.RetriveResponseBody;
@@ -28,42 +32,53 @@ export class BonusCalculatorServiceV2 {
     this.dangerousProjectIds = [];
   }
 
-  isLeavingHomebase(report: ReportsApi.RetriveResponseBody): boolean {
+  private isLeavingHomebase(report: ReportsApi.RetriveResponseBody): boolean {
     return (
       report.dep_string === this.params.employee.homebase &&
       report.arr_string !== this.params.employee.homebase
     );
   }
 
-  isArrivingAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
+  private isArrivingAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
     return (
       report.dep_string !== this.params.employee.homebase &&
       report.arr_string === this.params.employee.homebase
     );
   }
 
-  isDangerousProject(report: ReportsApi.RetriveResponseBody): boolean {
+  private isDangerousProject(report: ReportsApi.RetriveResponseBody): boolean {
     return (
       (DANGER_ZONES.includes(report.code) || DANGER_ZONES.includes(report.arr_string)) &&
       !this.isEndOfProjectInMiddleMonth({ report })
     );
   }
 
-  isEndOfProjectInMiddleMonth(params: { report: ReportsApi.RetriveResponseBody }) {
+  /* TODO: Use departure danger codes as well as project code */
+  private isEndOfProjectInMiddleMonth(params: { report: ReportsApi.RetriveResponseBody }) {
     return DANGER_ZONES.includes(params.report.code) && this.isArrivingAtHomebase(params.report);
   }
 
+  /* TODO: Should this be a function or in constructor */
   getEligbleBonusHours(): number {
     let isAssignedDangerousProject = false;
+    let hasLeftHomebase = false;
     let dangerousProjectStartDate: string | undefined = undefined;
-    let dangerousCode: string | undefined = undefined;
 
     return this.params.reports.reduce((amount, report, i) => {
-      /* Danger code detected */
+      if (this.isLeavingHomebase(report)) {
+        hasLeftHomebase = true;
+        console.log('Left', { date: report.from_date, id: report.id });
+      }
+
+      if (hasLeftHomebase && this.isDangerousProject(report) && !dangerousProjectStartDate) {
+        dangerousProjectStartDate = report.start_date;
+        console.log('Detected project');
+      }
+
+      /* Dangerous project detected, signifies start of project */
       if (this.isDangerousProject(report)) {
         isAssignedDangerousProject = true;
-        dangerousCode = report.code;
-        console.debug('Assigned hazard -', { code: report.code, date: report.start_date });
+        console.log('Assigned hazard -', { code: report.code, date: report.start_date });
       }
 
       /* Has left homebase with assigned dangerous project. */
@@ -73,11 +88,15 @@ export class BonusCalculatorServiceV2 {
         !dangerousProjectStartDate
       ) {
         dangerousProjectStartDate = report.start_date;
-        console.debug('Left homebase -', { date: report.start_date });
+        console.log('Left homebase -', { date: report.start_date });
       }
 
       if (isAssignedDangerousProject && dangerousProjectStartDate) {
         this.dangerousProjectIds.push(report.id);
+      }
+
+      if (this.isArrivingAtHomebase(report)) {
+        hasLeftHomebase = false;
       }
 
       /* Arrived at homebase with assigned dangerous project. Signifies end of project */
@@ -94,6 +113,7 @@ export class BonusCalculatorServiceV2 {
         amount += bonusPayDays;
         isAssignedDangerousProject = false;
         dangerousProjectStartDate = undefined;
+
         console.debug('Arrived at homebase -', {
           date: report.start_date,
           code: report.code,
@@ -103,151 +123,40 @@ export class BonusCalculatorServiceV2 {
 
       /* End of a dangerous project with no start date in the current month */
       if (this.isEndOfProjectInMiddleMonth({ report })) {
-        // TODO: Assumes all data is within the current month
-        const firstOfMonthDate = DateTime.fromISO(this.params.reports[0].start_date)
-          .toLocal()
-          .startOf('month');
+        const firstOfMonthDate = DateTime.fromISO(report.from_date).startOf('month');
 
         const bonusPayDays = DateTime.fromISO(report.from_date).diff(firstOfMonthDate, [
           'day',
         ]).days;
 
+        amount += bonusPayDays;
+
         console.debug('Found end of project with no start -', {
-          date: report.to_date,
+          currentDate: report.to_date,
           bonusDays: bonusPayDays,
         });
       }
 
-      // TODO: Switch to checking end of month insted of end of array.
-      // End of month. Check if they were still in a dangerous project. Add it to the current month.
+      // End of month. Check if they were still in a dangerous project. Add it to the bonus days.
       if (
         i === this.params.reports.length - 1 &&
         isAssignedDangerousProject &&
         dangerousProjectStartDate
       ) {
-        const bonusPayDays = DateTime.fromISO(report.to_date).diff(
-          DateTime.fromISO(dangerousProjectStartDate),
-          ['day']
-        ).days;
+        const bonusPayDays =
+          DateTime.fromISO(report.to_date).diff(DateTime.fromISO(dangerousProjectStartDate), [
+            'day',
+          ]).days + 1;
 
-        console.debug('Found no end of hazard pay', {
+        console.log('Found no end of hazard pay', {
           bonusDays: bonusPayDays,
           start: dangerousProjectStartDate,
           date: report.to_date,
         });
         amount += bonusPayDays;
-      }
-
-      return amount;
-    }, 0);
-  }
-
-  getMonthsBothPay(): number {
-    return this.getEligbleBonusHours() * this.params.hazardPayRate;
-  }
-}
-
-export class BonusCalculatorService {
-  constructor(private readonly params: BonusServiceParams) {}
-
-  hasLeftHomebase(report: ReportsApi.RetriveResponseBody): boolean {
-    return (
-      report.dep_string === this.params.employee.homebase &&
-      report.arr_string !== this.params.employee.homebase
-    );
-  }
-
-  hasArrivedAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
-    return (
-      report.arr_string === this.params.employee.homebase &&
-      report.dep_string !== this.params.employee.homebase
-    );
-  }
-
-  isEndOfProjectInMiddleMonth(params: { report: ReportsApi.RetriveResponseBody }) {
-    return DANGER_ZONES.includes(params.report.code) && this.hasArrivedAtHomebase(params.report);
-  }
-
-  getEligbleBonusHours(): number {
-    let isAssignedDangerousProject = false;
-    let dangerousProjectStartDate: string | undefined = undefined;
-    let dangerousCode: string | undefined = undefined;
-
-    return this.params.reports.reduce((amount, report, i) => {
-      /* Danger code detected */
-      if (DANGER_ZONES.includes(report.code) && !this.isEndOfProjectInMiddleMonth({ report })) {
-        isAssignedDangerousProject = true;
-        dangerousCode = report.code;
-        console.debug('Assigned hazard -', { code: report.code, date: report.start_date });
-      }
-
-      /* Has left homebase with assigned dangerous project. */
-      if (
-        this.hasLeftHomebase(report) &&
-        isAssignedDangerousProject &&
-        !dangerousProjectStartDate
-      ) {
-        dangerousProjectStartDate = report.start_date;
-        console.debug('Left homebase -', { date: report.start_date });
-      }
-
-      /* Arrived at homebase with assigned danergous project. Signifes end of project */
-      if (
-        this.hasArrivedAtHomebase(report) &&
-        isAssignedDangerousProject &&
-        dangerousProjectStartDate
-      ) {
-        const bonusPayDays = DateTime.fromISO(report.to_date).diff(
-          DateTime.fromISO(dangerousProjectStartDate),
-          ['day']
-        ).days;
-
-        amount += bonusPayDays;
-        console.debug('Arrived at homebase -', {
-          date: report.start_date,
-          code: report.code,
-          days: bonusPayDays,
-        });
 
         isAssignedDangerousProject = false;
         dangerousProjectStartDate = undefined;
-      }
-
-      /* End of a dangerous project with no start date in the current month */
-      if (this.isEndOfProjectInMiddleMonth({ report })) {
-        // TODO: Assumes all data is within the current month
-        const firstOfMonthDate = DateTime.fromISO(this.params.reports[0].start_date)
-          .toLocal()
-          .startOf('month');
-
-        const bonusPayDays = DateTime.fromISO(report.from_date).diff(firstOfMonthDate, [
-          'day',
-        ]).days;
-
-        console.debug('Found end of project with no start -', {
-          date: report.to_date,
-          bonusDays: bonusPayDays,
-        });
-      }
-
-      // TODO: Switch to checking end of month insted of end of array.
-      // End of month. Check if they were still in a dangerous project. Add it to the current month.
-      if (
-        i === this.params.reports.length - 1 &&
-        isAssignedDangerousProject &&
-        dangerousProjectStartDate
-      ) {
-        const bonusPayDays = DateTime.fromISO(report.to_date).diff(
-          DateTime.fromISO(dangerousProjectStartDate),
-          ['day']
-        ).days;
-
-        console.debug('Found no end of hazard pay', {
-          bonusDays: bonusPayDays,
-          start: dangerousProjectStartDate,
-          date: report.to_date,
-        });
-        amount += bonusPayDays;
       }
 
       return amount;

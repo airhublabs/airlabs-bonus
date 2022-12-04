@@ -1,23 +1,27 @@
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import {
-  Breadcrumbs, IconButton,
-  Link,
-  Typography
-} from '@mui/material';
+import { Breadcrumbs, IconButton, Link, Typography } from '@mui/material';
 import { Stack } from '@mui/system';
 import { useRouter } from 'next/router';
 import { FC, ReactNode } from 'react';
 
 export interface PageHeaderProps {
   actions?: ReactNode;
+  title: string;
+  breadcrumbLinks: { name: string; href?: string }[];
 }
 
-const PageHeader: FC<PageHeaderProps> = ({ actions, ...props }) => {
+const PageHeader: FC<PageHeaderProps> = ({ actions, title, breadcrumbLinks, ...props }) => {
   const router = useRouter();
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        bgcolor="#F5F8FA"
+        p="var(--space-3xs) var(--space-xs)"
+      >
         <Stack>
           <Stack direction="row" alignItems="center">
             <IconButton
@@ -27,14 +31,22 @@ const PageHeader: FC<PageHeaderProps> = ({ actions, ...props }) => {
             >
               <ArrowBackRoundedIcon />
             </IconButton>
-            <Typography variant="h4">Employee</Typography>
+            <Typography variant="h4">{title}</Typography>
           </Stack>
-          <Breadcrumbs>
-            <Link underline="hover" color="inherit" href="/">
-              Home
-            </Link>
-            <Typography>Adam</Typography>
-          </Breadcrumbs>
+
+          {breadcrumbLinks && (
+            <Breadcrumbs>
+              {breadcrumbLinks.map((breadcrumb, i) =>
+                i === breadcrumbLinks.length - 1 ? (
+                  <Typography key="name">{breadcrumb.name}</Typography>
+                ) : (
+                  <Link underline="hover" color="inherit" href={breadcrumb.href} key="name">
+                    {breadcrumb.name}
+                  </Link>
+                )
+              )}
+            </Breadcrumbs>
+          )}
         </Stack>
 
         {actions && (

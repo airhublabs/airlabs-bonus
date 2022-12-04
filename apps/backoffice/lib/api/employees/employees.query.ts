@@ -6,7 +6,6 @@ export const useListEmployees = () => {
   const employeeQuery = useQuery({
     queryKey: QUERY_KEY.listEmployees,
     queryFn: async () => (await api.employees.list()).data,
-    onSuccess: console.log,
   });
 
   return employeeQuery;

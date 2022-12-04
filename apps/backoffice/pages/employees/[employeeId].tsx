@@ -1,8 +1,6 @@
-import { BonusCalculatorService } from '@airlabs-bonus/bonus-calculator';
-import { ReportsApi } from '@airlabs-bonus/types';
 import { Button } from '@mui/material';
 import { Stack } from '@mui/system';
-import { DataGrid, GridEventListener, GridToolbar, GridToolbarExport } from '@mui/x-data-grid';
+import { DataGrid, GridEventListener, GridToolbarExport } from '@mui/x-data-grid';
 import api from 'apps/backoffice/lib/api/airlabs.api';
 import { useRetriveEmployee } from 'apps/backoffice/lib/api/employees/employees.query';
 import { useListReports } from 'apps/backoffice/lib/api/reports/reports.query';
@@ -10,10 +8,10 @@ import DataCard from 'apps/backoffice/lib/components/global/DataCard';
 import PageHeader from 'apps/backoffice/lib/components/header/PageHeader';
 import { EMPLOYEE_COLUMNS } from 'apps/backoffice/lib/views/employees/constants/employee-columns.constant';
 import EmployeeViewHeader from 'apps/backoffice/lib/views/employees/EmployeeViewHeader';
+import { transformReports } from 'apps/backoffice/lib/views/employees/logic/reports-transform.service';
 import ReportDialog from 'apps/backoffice/lib/views/employees/modals/ReportDialog';
 import MonthSelect, { MonthSelectProps } from 'apps/backoffice/lib/views/employees/MonthSelect';
 import { BonusCalculatorServiceV2 } from 'libs/bonus-calculator/src/lib/bonus-calculator.service';
-import { DateTime } from 'luxon';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -39,21 +37,6 @@ const EmployeeView = () => {
     setViewingMonth(params.value);
   };
 
-  const removeRedundantDateFromReports = (reports: ReportsApi.ListResponseBody) => {
-    if (!reports) return;
-    let intitalReportDate: string | undefined = undefined;
-
-    return reports.map((report) => {
-      if (DateTime.fromISO(report.from_date).day === DateTime.fromISO(intitalReportDate).day) {
-        report.from_date = '';
-      } else {
-        intitalReportDate = report.from_date;
-      }
-
-      return report;
-    });
-  };
-
   useEffect(() => {
     if (!reportsQuery.isSuccess || !employeeQuery.isSuccess) return;
 
@@ -65,8 +48,6 @@ const EmployeeView = () => {
 
     const bonusDays = bonus.getEligbleBonusHours();
 
-    console.log(bonus.dangerousProjectIds);
-
     setBonusData({
       days: bonusDays,
       amount: bonus.getMonthsBothPay(),
@@ -74,36 +55,38 @@ const EmployeeView = () => {
     });
   }, [
     employeeQuery.data,
+    employeeQuery.isSuccess,
     reportsQuery.isFetching,
     reportsQuery.data,
     reportsQuery.isSuccess,
-    employeeQuery.isSuccess,
   ]);
 
   return (
     <>
-      {employeeQuery.isSuccess && (
-        <EmployeeViewHeader
-          brq={employeeQuery.data.human_resource_brq}
-          employeeNumber={employeeQuery.data.emp_no}
-          name={employeeQuery.data.human_resource_full_name}
-          homebase={employeeQuery.data.homebase}
-        />
-      )}
+      <PageHeader
+        actions={
+          <Button variant="contained" size="medium" onClick={() => setIsReportModalOpen(true)}>
+            Create Report
+          </Button>
+        }
+        title="Employee"
+        breadcrumbLinks={[{ name: 'Home', href: '/' }, { name: 'Adam' }]}
+      />
 
       <main>
-        <PageHeader
-          actions={
-            <Button variant="contained" size="medium" onClick={() => setIsReportModalOpen(true)}>
-              Create Report
-            </Button>
-          }
-        />
+        {employeeQuery.isSuccess && (
+          <EmployeeViewHeader
+            brq={employeeQuery.data.human_resource_brq}
+            employeeNumber={employeeQuery.data.emp_no}
+            name={employeeQuery.data.human_resource_full_name}
+            homebase={employeeQuery.data.homebase}
+          />
+        )}
 
         <Stack direction="row" gap="var(--space-sm)">
           <DataCard
             title="Bonus Days"
-            value={Math.round(bonusData.days)}
+            value={Math.ceil(bonusData.days)}
             isLoading={reportsQuery.isLoading}
           />
           <DataCard
@@ -111,14 +94,13 @@ const EmployeeView = () => {
             value={`$${Math.round(bonusData.amount)}`}
             isLoading={reportsQuery.isLoading}
           />
-          <DataCard title="Most Visted" value="Madrid" isLoading={reportsQuery.isLoading} />
         </Stack>
 
         <MonthSelect onChange={handleChangeEvent} key="month" />
 
         <div className="data-grid-wrap">
           <DataGrid
-            rows={removeRedundantDateFromReports(reportsQuery?.data) || []}
+            rows={transformReports(reportsQuery?.data) || []}
             columns={EMPLOYEE_COLUMNS}
             loading={reportsQuery.isLoading}
             density="compact"
@@ -127,19 +109,20 @@ const EmployeeView = () => {
               Toolbar: ExportToolbar,
             }}
             getRowClassName={(params) =>
-              `${bonusData.dangerousProjectIds.includes(params.row.id) ? 'danger' : ''}`
+              `${bonusData.dangerousProjectIds.includes(params.row.id) ? 'danger' : 'row'}`
             }
             onCellEditCommit={handleUpdateCellData}
           />
         </div>
       </main>
 
-      {/* TODO: Add back in, module import issue from Localization */}
-      {/* <ReportDialog
+      <ReportDialog
         type="create"
         isOpen={isReportModalOpen}
+        employeeId={+employeeId}
+        onSubmit={() => reportsQuery.refetch()}
         onClose={() => setIsReportModalOpen(false)}
-      /> */}
+      />
 
       <style jsx>{`
         main {

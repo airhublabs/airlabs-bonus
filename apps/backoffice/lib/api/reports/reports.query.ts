@@ -17,7 +17,6 @@ export const useListReports = (params: { employeeId: number; month: number }) =>
   const reportsQuery = useQuery({
     queryKey: ['employees', { employeeId: params.employeeId, month: params.month }],
     queryFn: fetchReports,
-    onSettled: (value) => console.log(value),
     enabled: !!params.employeeId,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
