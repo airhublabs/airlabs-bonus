@@ -4,7 +4,10 @@ import { Stack } from '@mui/system';
 import { DataGrid, GridEventListener, GridToolbarExport } from '@mui/x-data-grid';
 import api from 'apps/backoffice/lib/api/airlabs.api';
 import { useRetriveEmployee } from 'apps/backoffice/lib/api/employees/employees.query';
-import { useListReports } from 'apps/backoffice/lib/api/reports/reports.query';
+import {
+  aggergateReportMonths,
+  useListReports,
+} from 'apps/backoffice/lib/api/reports/reports.query';
 import { useListDangerZones } from 'apps/backoffice/lib/api/zones/zones.query';
 import DataCard from 'apps/backoffice/lib/components/global/DataCard';
 import PageHeader from 'apps/backoffice/lib/components/header/PageHeader';
@@ -14,6 +17,7 @@ import { transformReports } from 'apps/backoffice/lib/views/employees/logic/repo
 import ReportDialog from 'apps/backoffice/lib/views/employees/modals/ReportDialog';
 import MonthSelect, { MonthSelectProps } from 'apps/backoffice/lib/views/employees/MonthSelect';
 import { BonusCalculatorServiceV2 } from 'libs/bonus-calculator/src/lib/bonus-calculator.service';
+import { DateTime } from 'luxon';
 import { useRouter } from 'next/router';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
@@ -23,10 +27,10 @@ const EmployeeView = () => {
   const [bonusData, setBonusData] = useState({ amount: 0, days: 0, dangerousProjectIds: [] });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [viewingMonth, setViewingMonth] = useState<number>(9);
-  const dangerZonesQuery = useListDangerZones();
   const { enqueueSnackbar } = useSnackbar();
 
   const reportsQuery = useListReports({ employeeId: +employeeId, month: viewingMonth });
+  const dangerZonesQuery = useListDangerZones();
   const employeeQuery = useRetriveEmployee(+employeeId);
 
   const handleUpdateCellData: GridEventListener<'cellEditCommit'> = async (params) => {
@@ -50,9 +54,18 @@ const EmployeeView = () => {
   useEffect(() => {
     if (!reportsQuery.isSuccess || !employeeQuery.isSuccess || !dangerZonesQuery.isSuccess) return;
 
-    const bonus = new BonusCalculatorServiceV2({
+    const { currentMonthReports, previousMonthReports } = aggergateReportMonths({
+      currentMonth: viewingMonth,
       reports: reportsQuery.data,
+    });
+
+    // console.log(currentMonthReports.map((report) => DateTime.fromISO(report.from_date).month));
+    // console.log(previousMonthReports.map((report) => DateTime.fromISO(report.from_date).month));
+
+    const bonus = new BonusCalculatorServiceV2({
+      reports: currentMonthReports,
       employee: employeeQuery.data,
+      previousMonthReports: previousMonthReports,
       hazardPayRate: 25.5,
       dangerZones: dangerZonesQuery?.data?.map((data) => data.zone),
     });
@@ -113,7 +126,12 @@ const EmployeeView = () => {
 
         <div className="data-grid-wrap">
           <DataGrid
-            rows={transformReports(reportsQuery?.data) || []}
+            rows={
+              transformReports(
+                aggergateReportMonths({ currentMonth: viewingMonth, reports: reportsQuery?.data })
+                  .currentMonthReports
+              ) || []
+            }
             columns={EMPLOYEE_COLUMNS}
             loading={reportsQuery.isLoading}
             density="compact"

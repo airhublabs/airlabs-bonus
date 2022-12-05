@@ -1,4 +1,6 @@
+import { ReportsApi } from '@airlabs-bonus/types';
 import { useQuery } from '@tanstack/react-query';
+import { DateTime } from 'luxon';
 import { endOfMonthDate, startOfMonthDate } from '../../utils/date.utils';
 import api from '../airlabs.api';
 
@@ -8,7 +10,7 @@ export const useListReports = (params: { employeeId: number; month: number }) =>
       await api.reports.list({
         employeeId: params.employeeId,
         query: {
-          start_date: startOfMonthDate(params.month).toISO(),
+          start_date: startOfMonthDate(params.month - 1).toISO(),
           end_date: endOfMonthDate(params.month).toISO(),
         },
       })
@@ -23,4 +25,30 @@ export const useListReports = (params: { employeeId: number; month: number }) =>
   });
 
   return reportsQuery;
+};
+
+interface AggergateReportReturn {
+  currentMonthReports: ReportsApi.ListResponseBody;
+  previousMonthReports: ReportsApi.ListResponseBody;
+}
+
+export const aggergateReportMonths = (params: {
+  currentMonth: number;
+  reports: ReportsApi.ListResponseBody;
+}): AggergateReportReturn => {
+  if (!params?.reports) return { currentMonthReports: [], previousMonthReports: [] };
+
+  return params.reports.reduce(
+    (acc: AggergateReportReturn, report) => {
+      if (DateTime.fromISO(report.from_date).month === params.currentMonth) {
+        acc.currentMonthReports.push(report);
+        return acc;
+      }
+
+      acc.previousMonthReports.push(report);
+
+      return acc;
+    },
+    { currentMonthReports: [], previousMonthReports: [] }
+  );
 };

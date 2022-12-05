@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 
 export interface BonusServiceParams {
   reports: ReportsApi.ListResponseBody;
+  previousMonthReports: ReportsApi.ListResponseBody;
   employee: EmployeesApi.RetriveResponseBody;
   hazardPayRate: number;
   dangerZones: string[];
@@ -12,9 +13,11 @@ const DEFAULT_DANGER_ZONES = ['ERBL', 'SNGL3', 'SNGL4', 'DSS', 'EBL'];
 
 export class BonusCalculatorServiceV2 {
   public dangerousProjectIds!: number[];
+  public hasDangerousProjectFromPrevious: boolean;
 
   constructor(private readonly params: BonusServiceParams) {
     this.dangerousProjectIds = [];
+    this.hasDangerousProjectFromPrevious = false;
     if (!this.params?.dangerZones?.length) this.params['dangerZones'] = DEFAULT_DANGER_ZONES;
   }
 
@@ -48,11 +51,34 @@ export class BonusCalculatorServiceV2 {
     );
   }
 
-  /* TODO: Should this be a function or in constructor */
+  private checkForPreviousDangerousProject() {
+    let isAssignedDangerousProject = false;
+    let dangerousProjectStartDate: string | undefined = undefined;
+
+    return this.params.previousMonthReports.reduce((acc, report, i) => {
+      if (this.isDangerousProject(report) && !isAssignedDangerousProject) {
+        isAssignedDangerousProject = true;
+      }
+
+      /* Has left homebase with assigned dangerous project. */
+      if (
+        this.isLeavingHomebase(report) &&
+        isAssignedDangerousProject &&
+        !dangerousProjectStartDate
+      ) {
+        dangerousProjectStartDate = report.start_date;
+        acc = true;
+      }
+
+      return acc;
+    }, false);
+  }
+
   getEligbleBonusHours(): number {
     let isAssignedDangerousProject = false;
     let hasLeftHomebase = false;
     let dangerousProjectStartDate: string | undefined = undefined;
+    let hasPreviousDangerousProject = this.checkForPreviousDangerousProject();
 
     return this.params.reports.reduce((amount, report, i) => {
       if (this.isLeavingHomebase(report)) {
@@ -83,6 +109,17 @@ export class BonusCalculatorServiceV2 {
 
       if (this.isArrivingAtHomebase(report)) {
         hasLeftHomebase = false;
+      }
+
+      if (this.isArrivingAtHomebase(report) && hasPreviousDangerousProject) {
+        const firstOfMonthDate = DateTime.fromISO(report.from_date).startOf('month');
+
+        const bonusPayDays = DateTime.fromISO(report.from_date).diff(firstOfMonthDate, [
+          'day',
+        ]).days;
+
+        amount += bonusPayDays;
+        hasPreviousDangerousProject = false;
       }
 
       /* Arrived at homebase with assigned dangerous project. Signifies end of project */

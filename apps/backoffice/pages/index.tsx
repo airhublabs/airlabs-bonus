@@ -58,7 +58,7 @@ export function Index() {
         </Stack>
 
         <div className="data-grid-wrap">
-          <DataGrid rows={employeesQuery?.data} columns={columns} loading={employeesQuery.isLoading} />
+          <DataGrid rows={employeesQuery?.data || []} columns={columns} loading={employeesQuery.isLoading} />
         </div>
       </main>
 
