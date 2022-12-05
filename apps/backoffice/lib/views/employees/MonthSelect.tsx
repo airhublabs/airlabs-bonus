@@ -1,10 +1,10 @@
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import { SelectChangeEvent, SelectInputProps } from '@mui/material/Select/SelectInput';
-import React, { FC, useEffect, useState } from 'react';
-import { currentMonth } from '../../utils/date.utils';
+import { SelectChangeEvent } from '@mui/material/Select/SelectInput';
+import { FC } from 'react';
 
 export interface MonthSelectProps {
   onChange: (params: { value: number; label: string }) => void;
+  month: number;
 }
 
 const MONTHS: { label: string; value: number }[] = [
@@ -16,18 +16,17 @@ const MONTHS: { label: string; value: number }[] = [
   { label: 'June', value: 6 },
   { label: 'July', value: 7 },
   { label: 'Augest', value: 8 },
-  { label: 'Sep', value: 9 },
-  { label: 'Oct', value: 10 },
-  { label: 'Nov', value: 11 },
-  { label: 'Dec', value: 12 },
+  { label: 'September', value: 9 },
+  { label: 'October', value: 10 },
+  { label: 'November', value: 11 },
+  { label: 'December', value: 12 },
 ];
 
-const MonthSelect: FC<MonthSelectProps> = (props) => {
-  const [selectedMonth, setMonth] = useState<number>(currentMonth);
+const MonthSelect: FC<MonthSelectProps> = ({ month, ...props }) => {
 
   const onSelectChange = (event: SelectChangeEvent<number>, child) => {
     const value = event.target.value as number;
-    setMonth(value);
+
     props.onChange &&
       props.onChange({
         value: value,
@@ -35,17 +34,11 @@ const MonthSelect: FC<MonthSelectProps> = (props) => {
       });
   };
 
-
   return (
     <>
       <FormControl>
         <InputLabel id="month-select">Month</InputLabel>
-        <Select
-          labelId="month-select"
-          value={selectedMonth}
-          label="Month"
-          onChange={onSelectChange}
-        >
+        <Select labelId="month-select" value={month} label="Month" onChange={onSelectChange}>
           {MONTHS.map((month) => (
             <MenuItem value={month.value} key={month.value}>
               {month.label.slice(0, 3)}

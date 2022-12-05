@@ -1,21 +1,6 @@
 import { EmployeesApi, ReportsApi } from '@airlabs-bonus/types';
 import { DateTime } from 'luxon';
 
-/*
-Questions that need calerfied
-- How to determin starting a new project? Is it when you see the code again. -
-- What happens when the arriaval loc is the same as departue.
-- Is homebase on a monthly bases or overall. - On a daily bases, only from midnight untilo 3 pm
-- Do danger zones need to be updated from code or databse - databse
-- Base DSS / ERBL
-
-- API endpoint for extracting bonus days to put into their system
-*/
-
-/*
-What happens when
-*/
-
 export interface BonusServiceParams {
   reports: ReportsApi.ListResponseBody;
   employee: EmployeesApi.RetriveResponseBody;
@@ -90,7 +75,6 @@ export class BonusCalculatorServiceV2 {
         !dangerousProjectStartDate
       ) {
         dangerousProjectStartDate = report.start_date;
-        console.log('Left homebase -', { date: report.start_date });
       }
 
       if (isAssignedDangerousProject && dangerousProjectStartDate) {
@@ -115,12 +99,6 @@ export class BonusCalculatorServiceV2 {
         amount += bonusPayDays;
         isAssignedDangerousProject = false;
         dangerousProjectStartDate = undefined;
-
-        console.debug('Arrived at homebase -', {
-          date: report.start_date,
-          code: report.code,
-          days: bonusPayDays,
-        });
       }
 
       /* End of a dangerous project with no start date in the current month */
@@ -132,11 +110,6 @@ export class BonusCalculatorServiceV2 {
         ]).days;
 
         amount += bonusPayDays;
-
-        console.debug('Found end of project with no start -', {
-          currentDate: report.to_date,
-          bonusDays: bonusPayDays,
-        });
       }
 
       // End of month. Check if they were still in a dangerous project. Add it to the bonus days.
@@ -150,11 +123,6 @@ export class BonusCalculatorServiceV2 {
             'day',
           ]).days + 1;
 
-        console.log('Found no end of hazard pay', {
-          bonusDays: bonusPayDays,
-          start: dangerousProjectStartDate,
-          date: report.to_date,
-        });
         amount += bonusPayDays;
 
         isAssignedDangerousProject = false;

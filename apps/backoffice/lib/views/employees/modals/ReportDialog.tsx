@@ -6,7 +6,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
+  TextField
 } from '@mui/material';
 import { Stack } from '@mui/system';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
@@ -16,7 +16,7 @@ import api from 'apps/backoffice/lib/api/airlabs.api';
 import { AxiosResponse } from 'axios';
 import { DateTime } from 'luxon';
 import { useSnackbar } from 'notistack';
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -90,10 +90,6 @@ const ReportDialog: FC<ReportDialogProps> = ({
     reset();
   };
 
-  useEffect(() => {
-    console.log(errors);
-  }, [errors]);
-
   return (
     <>
       <Dialog open={isOpen} fullWidth onClose={handleClose}>
@@ -137,8 +133,8 @@ const ReportDialog: FC<ReportDialogProps> = ({
                 label="Vechical Type"
                 name="vehicle_type"
                 variant="standard"
-                error={!!errors?.code}
-                helperText={errors?.code?.message}
+                error={!!errors?.vehicle_type}
+                helperText={errors?.vehicle_type?.message}
                 fullWidth
                 {...register('vehicle_type')}
               />

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Button } from '@mui/material';
 import { Stack } from '@mui/system';
 import { DataGrid, GridEventListener, GridToolbarExport } from '@mui/x-data-grid';
@@ -21,7 +22,7 @@ const EmployeeView = () => {
   const { employeeId } = useRouter().query;
   const [bonusData, setBonusData] = useState({ amount: 0, days: 0, dangerousProjectIds: [] });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [viewingMonth, setViewingMonth] = useState<number>();
+  const [viewingMonth, setViewingMonth] = useState<number>(9);
   const dangerZonesQuery = useListDangerZones();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -29,6 +30,9 @@ const EmployeeView = () => {
   const employeeQuery = useRetriveEmployee(+employeeId);
 
   const handleUpdateCellData: GridEventListener<'cellEditCommit'> = async (params) => {
+    // @ts-ignore - Ignored due to value exsiting but not knowing type interface.
+    if (params.formattedValue === params.value) return;
+
     try {
       await api.reports.update(+params.id, { [params.field]: params.value });
       enqueueSnackbar(`Updated report data in report ${params.id}`, { variant: 'success' });
@@ -105,7 +109,7 @@ const EmployeeView = () => {
           />
         </Stack>
 
-        <MonthSelect onChange={handleChangeEvent} key="month" />
+        <MonthSelect onChange={handleChangeEvent} month={viewingMonth} key="month" />
 
         <div className="data-grid-wrap">
           <DataGrid

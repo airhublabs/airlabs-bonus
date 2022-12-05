@@ -35,8 +35,6 @@ export function Index() {
     },
   ];
 
-  if (employeesQuery.isLoading || employeesQuery.isInitialLoading) return 'Loading...';
-
   return (
     <>
       <main>
@@ -60,7 +58,7 @@ export function Index() {
         </Stack>
 
         <div className="data-grid-wrap">
-          <DataGrid rows={employeesQuery.data} columns={columns} />
+          <DataGrid rows={employeesQuery?.data} columns={columns} loading={employeesQuery.isLoading} />
         </div>
       </main>
 
