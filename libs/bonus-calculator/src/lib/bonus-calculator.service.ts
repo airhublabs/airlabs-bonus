@@ -37,17 +37,8 @@ export class BonusCalculatorServiceV2 {
 
   private isDangerousProject(report: ReportsApi.RetriveResponseBody): boolean {
     return (
-      (this.params.dangerZones.includes(report.code) ||
-        this.params.dangerZones.includes(report.arr_string)) &&
-      !this.isEndOfProjectInMiddleMonth({ report })
-    );
-  }
-
-  /* TODO: Use departure danger codes as well as project code */
-  private isEndOfProjectInMiddleMonth(params: { report: ReportsApi.RetriveResponseBody }) {
-    return (
-      this.params.dangerZones.includes(params.report.code) &&
-      this.isArrivingAtHomebase(params.report)
+      this.params.dangerZones.includes(report.code) ||
+      this.params.dangerZones.includes(report.arr_string)
     );
   }
 
