@@ -11,6 +11,9 @@ export class ReportEntity extends OmitType(CreateReportDto, ['code']) implements
   @ApiProperty()
   employeee!: EmployeeEntity;
 
+  @ApiProperty()
+  scheduled_hours_duration!: string;
+
   @IsString()
   @IsOptional()
   @ApiProperty()

@@ -19,7 +19,7 @@ COPY /libs/utils ./libs/utils
 
 # BUILD
 RUN npx prisma generate
-RUN npx prisma migrate deploy
+# RUN npx prisma migrate deploy
 RUN npx nx build --project=api
 COPY ./prisma ./dist/apps/api
 

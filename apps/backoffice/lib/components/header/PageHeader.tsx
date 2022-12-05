@@ -1,5 +1,5 @@
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import { Breadcrumbs, IconButton, Link, Typography } from '@mui/material';
+import { Breadcrumbs, IconButton, Link, Typography, TypographyProps } from '@mui/material';
 import { Stack } from '@mui/system';
 import { useRouter } from 'next/router';
 import { FC, ReactNode } from 'react';
@@ -8,9 +8,20 @@ export interface PageHeaderProps {
   actions?: ReactNode;
   title: string;
   breadcrumbLinks: { name: string; href?: string }[];
+  bgcolor?: string;
+  padding?: number | string;
+  titleVariant?: TypographyProps['variant'];
 }
 
-const PageHeader: FC<PageHeaderProps> = ({ actions, title, breadcrumbLinks, ...props }) => {
+const PageHeader: FC<PageHeaderProps> = ({
+  actions,
+  title,
+  breadcrumbLinks,
+  bgcolor = '#F5F8FA',
+  titleVariant = 'h4',
+  padding = 'var(--space-3xs) var(--space-xs)',
+  ...props
+}) => {
   const router = useRouter();
 
   return (
@@ -19,19 +30,21 @@ const PageHeader: FC<PageHeaderProps> = ({ actions, title, breadcrumbLinks, ...p
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        bgcolor="#F5F8FA"
-        p="var(--space-3xs) var(--space-xs)"
+        bgcolor={bgcolor}
+        p={padding}
       >
         <Stack>
-          <Stack direction="row" alignItems="center">
-            <IconButton
-              size="small"
-              style={{ marginLeft: '-10px' }}
-              onClick={() => router.push('/')}
-            >
-              <ArrowBackRoundedIcon />
-            </IconButton>
-            <Typography variant="h4">{title}</Typography>
+          <Stack>
+            <Stack direction="row" alignItems="center">
+              <IconButton
+                size="small"
+                style={{ marginLeft: '-10px' }}
+                onClick={() => router.push('/')}
+              >
+                <ArrowBackRoundedIcon />
+              </IconButton>
+              <Typography variant={titleVariant}>{title}</Typography>
+            </Stack>
           </Stack>
 
           {breadcrumbLinks && (

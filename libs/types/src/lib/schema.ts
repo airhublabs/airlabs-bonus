@@ -90,6 +90,7 @@ export interface components {
       employee_id: number;
       id: number;
       employeee: components["schemas"]["EmployeeEntity"];
+      scheduled_hours_duration: string;
       code: string;
     };
     UpdateReportDto: {

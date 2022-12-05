@@ -1,12 +1,8 @@
-import { NextPageWithLayout } from 'apps/backoffice/pages/_app';
-import React, { createContext, FC, Key, PropsWithChildren } from 'react';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ThemeProvider } from '@mui/system';
-import { theme } from '../theme/mui.theme';
-import AlertContainer from '../components/global/AlertContainer';
-import { Alert, Snackbar } from '@mui/material';
-import { useAlerts } from '../hooks/useAlerts';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SnackbarProvider } from 'notistack';
+import { FC, PropsWithChildren } from 'react';
+import { theme } from '../theme/mui.theme';
 
 /* RootLayout is used to handle logic needed on every page, IE. Query Client, Redux, etc. */
 
@@ -15,19 +11,14 @@ export interface RootLayoutProps extends PropsWithChildren {}
 
 const RootLayout: FC<RootLayoutProps> = (props) => {
   const queryClient = new QueryClient();
-  const alert = useAlerts();
-
-  console.log(alert);
 
   return (
     <>
       <ThemeProvider theme={theme}>
-        <SnackbarProvider>
+        <SnackbarProvider autoHideDuration={4000} resumeHideDuration={10} maxSnack={3}>
           <QueryClientProvider client={queryClient}>{props.children}</QueryClientProvider>
         </SnackbarProvider>
       </ThemeProvider>
-
-      <AlertContainer xLocation="right" />
     </>
   );
 };

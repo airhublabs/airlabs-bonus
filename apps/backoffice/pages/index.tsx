@@ -1,21 +1,13 @@
-import { Box, Button, ButtonGroup, IconButton, Menu, MenuItem, Typography } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import { Stack } from '@mui/system';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { useListEmployees } from '../lib/api/employees/employees.query';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { useEffect, useRef, useState } from 'react';
-import SettingsIcon from '@mui/icons-material/Settings';
-import EditIcon from '@mui/icons-material/Edit';
-import Footer from '../lib/components/global/Footer';
 import { useRouter } from 'next/router';
+import { useListEmployees } from '../lib/api/employees/employees.query';
 
 export function Index() {
   const employeesQuery = useListEmployees();
   const router = useRouter();
-  const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);
-  const [isCellOverflowMenuOpen, setCellOverflowMenuOpen] = useState(false);
-  const overflowMenuButtonRef = useRef();
-  const cellOverflowMenuRef = useRef<any>();
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 10 },
@@ -60,25 +52,12 @@ export function Index() {
             <Typography variant="body1">Calculatre cabin & flight crew danger bonuses</Typography>
           </Stack>
 
-          <IconButton ref={overflowMenuButtonRef} onClick={() => router.push('/settings')}>
-            <SettingsIcon />
-          </IconButton>
+          <Tooltip title="Change danger zone settings" arrow>
+            <IconButton onClick={() => router.push('/settings')}>
+              <SettingsIcon />
+            </IconButton>
+          </Tooltip>
         </Stack>
-
-        <Menu
-          open={isOverflowMenuOpen}
-          anchorEl={overflowMenuButtonRef.current}
-          onClose={() => setIsOverflowMenuOpen(false)}
-          elevation={4}
-        >
-          <MenuItem>
-            <Stack gap={1} direction="row" alignItems="center">
-              <EditIcon />
-              <Typography>Edit danger zones</Typography>
-            </Stack>
-          </MenuItem>
-          <MenuItem>Edit danger zones</MenuItem>
-        </Menu>
 
         <div className="data-grid-wrap">
           <DataGrid rows={employeesQuery.data} columns={columns} />
@@ -94,7 +73,7 @@ export function Index() {
 
         .data-grid-wrap {
           width: 100%;
-          height: 500px;
+          height: 700px;
         }
       `}</style>
     </>

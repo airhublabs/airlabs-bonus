@@ -4,6 +4,7 @@ import { DataGrid, GridEventListener, GridToolbarExport } from '@mui/x-data-grid
 import api from 'apps/backoffice/lib/api/airlabs.api';
 import { useRetriveEmployee } from 'apps/backoffice/lib/api/employees/employees.query';
 import { useListReports } from 'apps/backoffice/lib/api/reports/reports.query';
+import { useListDangerZones } from 'apps/backoffice/lib/api/zones/zones.query';
 import DataCard from 'apps/backoffice/lib/components/global/DataCard';
 import PageHeader from 'apps/backoffice/lib/components/header/PageHeader';
 import { EMPLOYEE_COLUMNS } from 'apps/backoffice/lib/views/employees/constants/employee-columns.constant';
@@ -13,6 +14,7 @@ import ReportDialog from 'apps/backoffice/lib/views/employees/modals/ReportDialo
 import MonthSelect, { MonthSelectProps } from 'apps/backoffice/lib/views/employees/MonthSelect';
 import { BonusCalculatorServiceV2 } from 'libs/bonus-calculator/src/lib/bonus-calculator.service';
 import { useRouter } from 'next/router';
+import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 
 const EmployeeView = () => {
@@ -20,6 +22,8 @@ const EmployeeView = () => {
   const [bonusData, setBonusData] = useState({ amount: 0, days: 0, dangerousProjectIds: [] });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [viewingMonth, setViewingMonth] = useState<number>();
+  const dangerZonesQuery = useListDangerZones();
+  const { enqueueSnackbar } = useSnackbar();
 
   const reportsQuery = useListReports({ employeeId: +employeeId, month: viewingMonth });
   const employeeQuery = useRetriveEmployee(+employeeId);
@@ -27,9 +31,11 @@ const EmployeeView = () => {
   const handleUpdateCellData: GridEventListener<'cellEditCommit'> = async (params) => {
     try {
       await api.reports.update(+params.id, { [params.field]: params.value });
+      enqueueSnackbar(`Updated report data in report ${params.id}`, { variant: 'success' });
+
       reportsQuery.refetch();
     } catch (error) {
-      console.error(error);
+      enqueueSnackbar(`Failed to update report data`, { variant: 'error' });
     }
   };
 
@@ -38,12 +44,13 @@ const EmployeeView = () => {
   };
 
   useEffect(() => {
-    if (!reportsQuery.isSuccess || !employeeQuery.isSuccess) return;
+    if (!reportsQuery.isSuccess || !employeeQuery.isSuccess || !dangerZonesQuery.isSuccess) return;
 
     const bonus = new BonusCalculatorServiceV2({
       reports: reportsQuery.data,
       employee: employeeQuery.data,
       hazardPayRate: 25.5,
+      dangerZones: dangerZonesQuery?.data?.map((data) => data.zone),
     });
 
     const bonusDays = bonus.getEligbleBonusHours();
@@ -58,6 +65,8 @@ const EmployeeView = () => {
     employeeQuery.isSuccess,
     reportsQuery.isFetching,
     reportsQuery.data,
+    dangerZonesQuery.isSuccess,
+    dangerZonesQuery.data,
     reportsQuery.isSuccess,
   ]);
 

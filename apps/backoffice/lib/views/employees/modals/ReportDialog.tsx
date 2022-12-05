@@ -1,26 +1,24 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { LoadingButton } from '@mui/lab';
 import {
   Button,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
-  ModalProps,
   TextField,
-  Typography,
 } from '@mui/material';
 import { Stack } from '@mui/system';
-import React, { FC, useEffect, useState } from 'react';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z, infer, date } from 'zod';
-import { DateTime } from 'luxon';
-import { LoadingButton } from '@mui/lab';
-import { AxiosResponse } from 'axios';
 import api from 'apps/backoffice/lib/api/airlabs.api';
+import { AxiosResponse } from 'axios';
+import { DateTime } from 'luxon';
+import { useSnackbar } from 'notistack';
+import { FC, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 export interface ReportDialogProps {
   type: 'edit' | 'create';
@@ -52,13 +50,12 @@ const ReportDialog: FC<ReportDialogProps> = ({
 }) => {
   const [arrivalDate, setArrivalDate] = useState('');
   const [departureDate, setDepartureDate] = useState('');
+  const { enqueueSnackbar } = useSnackbar();
 
   const {
     register,
     handleSubmit,
     reset,
-    setValue,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<ReportSchema>({
     resolver: zodResolver(reportSchema),
@@ -84,7 +81,7 @@ const ReportDialog: FC<ReportDialogProps> = ({
       onSubmit && onSubmit(response);
       onClose && onClose();
     } catch (error) {
-      // TODO: Add alert
+      enqueueSnackbar('Failed to create report', { variant: 'error' });
     }
   };
 

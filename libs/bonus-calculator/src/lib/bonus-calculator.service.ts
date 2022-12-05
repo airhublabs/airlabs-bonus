@@ -20,16 +20,17 @@ export interface BonusServiceParams {
   reports: ReportsApi.ListResponseBody;
   employee: EmployeesApi.RetriveResponseBody;
   hazardPayRate: number;
+  dangerZones: string[];
 }
 
-/* TODO: Switch to dynamic danger zones */
-const DANGER_ZONES = ['ERBL', 'SNGL3', 'SNGL4', 'DSS', 'EBL'];
+const DEFAULT_DANGER_ZONES = ['ERBL', 'SNGL3', 'SNGL4', 'DSS', 'EBL'];
 
 export class BonusCalculatorServiceV2 {
   public dangerousProjectIds!: number[];
 
   constructor(private readonly params: BonusServiceParams) {
     this.dangerousProjectIds = [];
+    if (!this.params?.dangerZones?.length) this.params['dangerZones'] = DEFAULT_DANGER_ZONES;
   }
 
   private isLeavingHomebase(report: ReportsApi.RetriveResponseBody): boolean {
@@ -48,14 +49,18 @@ export class BonusCalculatorServiceV2 {
 
   private isDangerousProject(report: ReportsApi.RetriveResponseBody): boolean {
     return (
-      (DANGER_ZONES.includes(report.code) || DANGER_ZONES.includes(report.arr_string)) &&
+      (this.params.dangerZones.includes(report.code) ||
+        this.params.dangerZones.includes(report.arr_string)) &&
       !this.isEndOfProjectInMiddleMonth({ report })
     );
   }
 
   /* TODO: Use departure danger codes as well as project code */
   private isEndOfProjectInMiddleMonth(params: { report: ReportsApi.RetriveResponseBody }) {
-    return DANGER_ZONES.includes(params.report.code) && this.isArrivingAtHomebase(params.report);
+    return (
+      this.params.dangerZones.includes(params.report.code) &&
+      this.isArrivingAtHomebase(params.report)
+    );
   }
 
   /* TODO: Should this be a function or in constructor */
@@ -67,18 +72,15 @@ export class BonusCalculatorServiceV2 {
     return this.params.reports.reduce((amount, report, i) => {
       if (this.isLeavingHomebase(report)) {
         hasLeftHomebase = true;
-        console.log('Left', { date: report.from_date, id: report.id });
-      }
-
-      if (hasLeftHomebase && this.isDangerousProject(report) && !dangerousProjectStartDate) {
-        dangerousProjectStartDate = report.start_date;
-        console.log('Detected project');
       }
 
       /* Dangerous project detected, signifies start of project */
-      if (this.isDangerousProject(report)) {
+      if (hasLeftHomebase && this.isDangerousProject(report) && !dangerousProjectStartDate) {
+        dangerousProjectStartDate = report.start_date;
+      }
+
+      if (this.isDangerousProject(report) && !isAssignedDangerousProject) {
         isAssignedDangerousProject = true;
-        console.log('Assigned hazard -', { code: report.code, date: report.start_date });
       }
 
       /* Has left homebase with assigned dangerous project. */

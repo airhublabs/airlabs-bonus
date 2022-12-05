@@ -1,19 +1,11 @@
 import { Button, CircularProgress, Container, Typography } from '@mui/material';
 import { Stack } from '@mui/system';
-import React, {
-  FC,
-  Reducer,
-  useEffect,
-  useReducer,
-  useState,
-  type Reducer as ReducerType,
-} from 'react';
+import { useSnackbar } from 'notistack';
+import { useState } from 'react';
 import api from '../lib/api/airlabs.api';
 import { useListDangerZones } from '../lib/api/zones/zones.query';
 import PageHeader from '../lib/components/header/PageHeader';
-import { useAlerts } from '../lib/hooks/useAlerts';
 import ListTextField from '../lib/views/settings/ListTextField';
-import { useSnackbar } from 'notistack';
 
 interface ZoneActionData {
   zone: string;
@@ -23,7 +15,6 @@ interface ZoneActionData {
 
 const Settings = (props) => {
   const [dangerZones, setDangerZones] = useState<ZoneActionData[]>([]);
-  const alerts = useAlerts();
   const { enqueueSnackbar } = useSnackbar();
 
   const dangerZonesQuery = useListDangerZones({
@@ -48,10 +39,12 @@ const Settings = (props) => {
 
   const deleteDangerZone = async (zoneId: number) => {
     setDangerZones((_zone) => _zone.filter((dangerZone) => dangerZone.id !== zoneId));
+
     try {
       const response = await api.dangerZones.delete(zoneId);
+      enqueueSnackbar(`Deleted danger zone '${response.data.zone}'`, { variant: 'success' });
     } catch (error) {
-      console.error(error);
+      enqueueSnackbar(`Failed to delete danger zone`, { variant: 'error' });
     }
   };
 
@@ -74,17 +67,23 @@ const Settings = (props) => {
         const response = await api.dangerZones.create({ zone });
         updateDangerZone(id, { isNew: false, id: response.data.id, zone: response.data.zone });
 
-        console.log(response);
+        enqueueSnackbar(`Added danger zone '${response.data.zone}'`, { variant: 'success' });
       } catch (error) {
-        console.error(error);
+        enqueueSnackbar(`Failed to add danger zone '${zone}'`, {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
       }
     } else {
       try {
         const response = await api.dangerZones.update(id, { zone });
 
-        console.log(response);
+        enqueueSnackbar(`Updated danger zone '${response.data.zone}'`, { variant: 'success' });
       } catch (error) {
-        console.error(error);
+        enqueueSnackbar(`Failed to update danger zone '${zone}'`, {
+          variant: 'error',
+          autoHideDuration: 3000,
+        });
       }
     }
   };
@@ -95,8 +94,13 @@ const Settings = (props) => {
     <>
       <Container maxWidth="md" sx={{ padding: 'var(--space-sm)' }}>
         <header>
-          <Typography variant="h1">Settings</Typography>
-          <Button onClick={() => enqueueSnackbar('Hello', {title: "testing"})}>Add Alert</Button>
+          <PageHeader
+            title="Settings"
+            breadcrumbLinks={[{ name: 'Home', href: '/' }, { name: 'Settings' }]}
+            bgcolor="none"
+            padding={0}
+            titleVariant="h1"
+          />
         </header>
 
         <section className="settings">
