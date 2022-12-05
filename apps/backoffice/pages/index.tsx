@@ -4,11 +4,14 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { useListEmployees } from '../lib/api/employees/employees.query';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useEffect, useRef, useState } from 'react';
+import SettingsIcon from '@mui/icons-material/Settings';
 import EditIcon from '@mui/icons-material/Edit';
 import Footer from '../lib/components/global/Footer';
+import { useRouter } from 'next/router';
 
 export function Index() {
   const employeesQuery = useListEmployees();
+  const router = useRouter();
   const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);
   const [isCellOverflowMenuOpen, setCellOverflowMenuOpen] = useState(false);
   const overflowMenuButtonRef = useRef();
@@ -57,20 +60,9 @@ export function Index() {
             <Typography variant="body1">Calculatre cabin & flight crew danger bonuses</Typography>
           </Stack>
 
-          <ButtonGroup>
-            <Button variant="contained">Create Employee</Button>
-            <Button
-              variant="contained"
-              size="small"
-              ref={overflowMenuButtonRef}
-              onClick={() => setIsOverflowMenuOpen(true)}
-            >
-              <MoreVertIcon />
-            </Button>
-            {/* <IconButton ref={overflowMenuButtonRef} onClick={() => setIsOverflowMenuOpen(true)}>
-              <MoreVertIcon />
-            </IconButton> */}
-          </ButtonGroup>
+          <IconButton ref={overflowMenuButtonRef} onClick={() => router.push('/settings')}>
+            <SettingsIcon />
+          </IconButton>
         </Stack>
 
         <Menu

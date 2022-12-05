@@ -15,6 +15,8 @@ const DashboardLayout: FC<DashboardLayoutProps> = (props) => {
 
       <style jsx>{`
         .layout {
+          // display: grid;
+          // grid-template-columns: auto 1fr;
           display: grid;
           grid-template-rows: 1fr auto;
           height: 100%;

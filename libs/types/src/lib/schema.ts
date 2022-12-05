@@ -31,6 +31,15 @@ export interface paths {
     delete: operations["ReportsController_remove"];
     patch: operations["ReportsController_update"];
   };
+  "/v1/danger-zones": {
+    get: operations["DangerZonesController_list"];
+    post: operations["DangerZonesController_create"];
+  };
+  "/v1/danger-zones/{id}": {
+    get: operations["DangerZonesController_retrive"];
+    delete: operations["DangerZonesController_remove"];
+    patch: operations["DangerZonesController_update"];
+  };
 }
 
 export interface components {
@@ -94,6 +103,16 @@ export interface components {
       vehicle_type?: string;
       roster_designators?: string;
       project_name_text?: string;
+    };
+    CreateDangerZoneDto: {
+      zone: string;
+    };
+    DangerZoneEntity: {
+      zone: string;
+      id: number;
+    };
+    UpdateDangerZoneDto: {
+      zone?: string;
     };
   };
 }
@@ -264,6 +283,78 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["UpdateReportDto"];
+      };
+    };
+  };
+  DangerZonesController_list: {
+    parameters: {};
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["DangerZoneEntity"][];
+        };
+      };
+    };
+  };
+  DangerZonesController_create: {
+    parameters: {};
+    responses: {
+      201: {
+        content: {
+          "application/json": components["schemas"]["DangerZoneEntity"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDangerZoneDto"];
+      };
+    };
+  };
+  DangerZonesController_retrive: {
+    parameters: {
+      path: {
+        id: number;
+      };
+    };
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["DangerZoneEntity"];
+        };
+      };
+    };
+  };
+  DangerZonesController_remove: {
+    parameters: {
+      path: {
+        id: number;
+      };
+    };
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["DangerZoneEntity"];
+        };
+      };
+    };
+  };
+  DangerZonesController_update: {
+    parameters: {
+      path: {
+        id: number;
+      };
+    };
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["DangerZoneEntity"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateDangerZoneDto"];
       };
     };
   };

@@ -50,6 +50,4 @@ model Report {
 model DangerZone {
   id Int @id @default(autoincrement())
   zone String @unique
-  bonus_amount Float @default(25.5)
-  bonus_currency String @default("EUR")
 }
