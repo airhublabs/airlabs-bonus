@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Report } from '@prisma/client';
 import { IsISO8601, IsNumber, IsOptional, IsString } from 'class-validator';
 import { OmitCreateDtoFields } from '../../../types/helpers.type';
@@ -18,7 +18,8 @@ export class CreateReportDto implements OmitCreateDtoFields<Report> {
 
   @IsString()
   @IsOptional()
-  code = 'N/A';
+  @ApiPropertyOptional()
+  code!: string;
 
   @IsString()
   @IsOptional()
@@ -35,7 +36,7 @@ export class CreateReportDto implements OmitCreateDtoFields<Report> {
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ type: String })
+  @ApiPropertyOptional({ type: String })
   vehicle_type!: string;
 
   @IsString()
@@ -44,14 +45,15 @@ export class CreateReportDto implements OmitCreateDtoFields<Report> {
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ type: String })
+  @ApiPropertyOptional({ type: String })
   roster_designators!: string;
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ type: String })
+  @ApiPropertyOptional({ type: String })
   project_name_text!: string;
 
   @IsNumber()
+  @ApiProperty()
   employee_id!: number;
 }

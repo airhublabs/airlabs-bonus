@@ -1,0 +1,31 @@
+{
+  "name": "bonus-calculator",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/bonus-calculator/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/bonus-calculator/**/*.ts"]
+      }
+    },
+    "start:dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nodemon --ext ts --exec ts-node --ignore '*.test.ts' index.ts",
+        "cwd": "libs/bonus-calculator/src"
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/bonus-calculator"],
+      "options": {
+        "jestConfig": "libs/bonus-calculator/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

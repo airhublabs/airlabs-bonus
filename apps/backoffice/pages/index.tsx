@@ -1,20 +1,13 @@
+import SettingsIcon from '@mui/icons-material/Settings';
+import { IconButton, Tooltip, Typography } from '@mui/material';
+import { Stack } from '@mui/system';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { useQuery } from '@tanstack/react-query';
-import api from '../lib/api/airlabs.api';
-import { QUERY_KEY } from '../lib/constants/query-key.constant';
-
-const useListEmployees = () => {
-  const employeeQuery = useQuery({
-    queryKey: QUERY_KEY.listEmployees,
-    queryFn: async () => (await api.employees.list()).data,
-    onSuccess: console.log,
-  });
-
-  return employeeQuery;
-};
+import { useRouter } from 'next/router';
+import { useListEmployees } from '../lib/api/employees/employees.query';
 
 export function Index() {
   const employeesQuery = useListEmployees();
+  const router = useRouter();
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 10 },
@@ -29,20 +22,58 @@ export function Index() {
     { field: 'human_resource_rank', headerName: 'FO' },
     { field: 'type', headerName: 'Type', width: 120 },
     { field: 'homebase', headerName: 'Homebase' },
+    {
+      field: 'data-actions',
+      headerName: '',
+      disableColumnMenu: true,
+      disableReorder: false,
+      filterable: false,
+      sortable: false,
+      width: 50,
+      align: 'center',
+      editable: false,
+    },
   ];
 
   if (employeesQuery.isLoading || employeesQuery.isInitialLoading) return 'Loading...';
 
   return (
     <>
-      <div className="data-grid-wrap">
-        <DataGrid rows={employeesQuery.data} columns={columns} />
-      </div>
+      <main>
+        <Stack
+          component="header"
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          mb="var(--space-sm)"
+        >
+          <Stack>
+            <Typography variant="h2">Security Bonus Calculator</Typography>
+            <Typography variant="body1">Calculatre cabin & flight crew danger bonuses</Typography>
+          </Stack>
+
+          <Tooltip title="Change danger zone settings" arrow>
+            <IconButton onClick={() => router.push('/settings')}>
+              <SettingsIcon />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+
+        <div className="data-grid-wrap">
+          <DataGrid rows={employeesQuery.data} columns={columns} />
+        </div>
+      </main>
 
       <style jsx>{`
+        main {
+          padding: var(--space-sm);
+          width: 100%;
+          height: 100%;
+        }
+
         .data-grid-wrap {
           width: 100%;
-          height: 400px;
+          height: 700px;
         }
       `}</style>
     </>

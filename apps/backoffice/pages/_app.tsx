@@ -21,7 +21,8 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   return getPageLayout(
     <>
       <Head>
-        <title>Welcome to backoffice!</title>
+        <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
+        <title>Airlabs Backoffice</title>
       </Head>
 
       <RootLayout>

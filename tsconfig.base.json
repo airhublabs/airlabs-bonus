@@ -16,6 +16,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@airlabs-bonus/bonus-calculator": ["libs/bonus-calculator/src/index.ts"],
       "@airlabs-bonus/data-access": ["libs/data-access/src/index.ts"],
       "@airlabs-bonus/types": ["libs/types/src/index.ts"],
       "@airlabs-bonus/utils": ["libs/utils/src/index.ts"]

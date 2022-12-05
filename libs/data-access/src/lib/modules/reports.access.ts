@@ -17,9 +17,9 @@ export class Reports {
     return response;
   }
 
-  async retrive(employeeId: number) {
+  async retrive(reportId: number) {
     const response = await this.request.get<ReportsApi.RetriveResponseBody>(
-      `/reports/${employeeId}`
+      `/reports/${reportId}`
     );
 
     return response;
@@ -31,17 +31,17 @@ export class Reports {
     return response;
   }
 
-  async update(employeeId: number, data: ReportsApi.UpdateResponse) {
+  async update(reportId: number, data: ReportsApi.UpdateData) {
     const response = await this.request.patch<ReportsApi.UpdateResponse>(
-      `/reports/${employeeId}`,
+      `/reports/${reportId}`,
       data
     );
 
     return response;
   }
 
-  async delete(employeeId: number) {
-    const response = await this.request.delete<ReportsApi.DeleteResponse>(`/reports/${employeeId}`);
+  async delete(reportId: number) {
+    const response = await this.request.delete<ReportsApi.DeleteResponse>(`/reports/${reportId}`);
 
     return response;
   }

@@ -29,33 +29,50 @@ interface CabinCrewData {
 
 const partialCabinCrewSlice = data.Report as unknown as CabinCrewData['Report'];
 
+/*
+CORRECT:
+- SAT
+- RIC
+
+INCORRECT:
+- TTS - 13, should be 15
+- PKM 15, should be 16
+*/
+
 const USERS = (
   params: CabinCrewData['Report'][number]
 ): Record<string, Prisma.EmployeeCreateInput> => ({
-  AAR: {
-    emp_no: params.EmpNo,
-    homebase: 'FCO',
-    human_resource_brq: params.HumanResourceBRQ,
-    human_resource_full_name: params.HumanResourceFullName,
-    human_resource_rank: params.HumanResourceRank,
-  },
-  ACG: {
-    emp_no: params.EmpNo,
-    homebase: 'MLA',
-    human_resource_brq: params.HumanResourceBRQ,
-    human_resource_full_name: params.HumanResourceFullName,
-    human_resource_rank: params.HumanResourceRank,
-  },
-  ADI: {
-    emp_no: params.EmpNo,
-    homebase: 'BJV',
-    human_resource_brq: params.HumanResourceBRQ,
-    human_resource_full_name: params.HumanResourceFullName,
-    human_resource_rank: params.HumanResourceRank,
-  },
-  ADJ: {
+  RIC: {
     emp_no: params.EmpNo,
     homebase: 'AYT',
+    human_resource_brq: params.HumanResourceBRQ,
+    human_resource_full_name: params.HumanResourceFullName,
+    human_resource_rank: params.HumanResourceRank,
+  },
+  TTS: {
+    emp_no: params.EmpNo,
+    homebase: 'CDG',
+    human_resource_brq: params.HumanResourceBRQ,
+    human_resource_full_name: params.HumanResourceFullName,
+    human_resource_rank: params.HumanResourceRank,
+  },
+  SAT: {
+    emp_no: params.EmpNo,
+    homebase: 'CDG',
+    human_resource_brq: params.HumanResourceBRQ,
+    human_resource_full_name: params.HumanResourceFullName,
+    human_resource_rank: params.HumanResourceRank,
+  },
+  PKM: {
+    emp_no: params.EmpNo,
+    homebase: 'CDG',
+    human_resource_brq: params.HumanResourceBRQ,
+    human_resource_full_name: params.HumanResourceFullName,
+    human_resource_rank: params.HumanResourceRank,
+  },
+  PAP: {
+    emp_no: params.EmpNo,
+    homebase: 'CDG',
     human_resource_brq: params.HumanResourceBRQ,
     human_resource_full_name: params.HumanResourceFullName,
     human_resource_rank: params.HumanResourceRank,

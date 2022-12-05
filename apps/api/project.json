@@ -17,13 +17,15 @@
         "tsConfig": "apps/api/tsconfig.app.json",
         "assets": [
           "apps/api/src/assets"
-        ]
+        ],
+        "generatePackageJson": true
       },
       "configurations": {
         "production": {
           "optimization": true,
           "extractLicenses": true,
           "inspect": false,
+          "generatePackageJson": true,
           "fileReplacements": [
             {
               "replace": "apps/api/src/environments/environment.ts",
@@ -63,6 +65,26 @@
       "options": {
         "jestConfig": "apps/api/jest.config.ts",
         "passWithNoTests": true
+      }
+    },
+    "docker:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t airlabs-api -f ./Dockerfile ../../",
+        "cwd": "apps/api"
+      }
+    },
+    "docker:push": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "docker build -t airlabs-api -f ./Dockerfile ../../",
+          "aws ecr get-login-password --region me-south-1 | docker login --username AWS --password-stdin 040133161491.dkr.ecr.me-south-1.amazonaws.com",
+          "docker tag airlabs-api:latest 040133161491.dkr.ecr.me-south-1.amazonaws.com/airlabs-api:latest",
+          "docker push 040133161491.dkr.ecr.me-south-1.amazonaws.com/airlabs-api:latest"
+        ],
+        "parallel": false,
+        "cwd": "apps/api"
       }
     },
     "swagger": {

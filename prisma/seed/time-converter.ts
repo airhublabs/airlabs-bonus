@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { parseStringDuration } from '../../apps/api/src/common/helpers/time.helper';
+import { parseStringDuration } from '../../libs/utils/src';
 
 interface RosterTimeFormat {
   StartDate: string;

@@ -3,6 +3,8 @@ import { DateTime } from 'luxon';
 export const stringifyISO = (isoDate: string) => {
   const lISODate = DateTime.fromISO(isoDate);
 
+  if (!lISODate.isValid) return isoDate;
+
   return lISODate.toFormat('dd-MM-yy');
 };
 

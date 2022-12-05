@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { BonusCalculatorServiceV2 } from 'libs/bonus-calculator/src/lib/bonus-calculator.service';
+import { DangerZones } from './modules/danger-zone.access';
 import { Employees } from './modules/employees.access';
 import { Reports } from './modules/reports.access';
 import { filterEmptyKeys } from './utils/object.utils';
@@ -85,11 +87,13 @@ export class Request {
 export class AirlabsApi {
   public employees: Employees;
   public reports: Reports;
+  public dangerZones: DangerZones;
 
   constructor(public params?: Partial<RequestParams>) {
     const request = new Request(params);
 
     this.employees = new Employees(request);
     this.reports = new Reports(request);
+    this.dangerZones = new DangerZones(request);
   }
 }

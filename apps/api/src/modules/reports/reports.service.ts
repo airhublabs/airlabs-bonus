@@ -41,6 +41,8 @@ export class ReportsService {
       where: {
         ...params?.filter,
       },
+      orderBy: {start_date: "asc"},
+      include: {employee: true}
     });
 
     return reports;

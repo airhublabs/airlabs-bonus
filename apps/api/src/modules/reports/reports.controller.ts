@@ -12,11 +12,12 @@ import {
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
-import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ReportEntity } from './entities/report.entity';
 import { ListReportsDto } from './dto/get-report.dto';
 
 @Controller()
+@ApiTags("Reports")
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
