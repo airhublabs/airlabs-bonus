@@ -23,7 +23,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
+  <a href="https://airhubaviation.com/">
     <img src="https://airhubaviation.com/wp-content/uploads/2021/10/logo.svg" alt="Logo" width="400" height="80">
   </a>
 
@@ -32,7 +32,7 @@
   <p align="center">
     Trial project to calculate flight & cabin crew bonuses for flying over dangerous zones. 
     <br />
-        <a href="https://github.com/othneildrew/Best-README-Template"><strong>View Live»</strong></a>
+        <a href="newage.dev"><strong>View Live»</strong></a>
     <br />
     <br />
         <a href="api.newage.dev/docs">API Docs</a>
