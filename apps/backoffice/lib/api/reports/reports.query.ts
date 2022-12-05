@@ -40,7 +40,9 @@ export const aggergateReportMonths = (params: {
 
   return params.reports.reduce(
     (acc: AggergateReportReturn, report) => {
-      if (DateTime.fromISO(report.from_date).month === params.currentMonth) {
+      const lStartDate = DateTime.fromISO(report.start_date);
+
+      if (lStartDate.month === params.currentMonth) {
         acc.currentMonthReports.push(report);
         return acc;
       }

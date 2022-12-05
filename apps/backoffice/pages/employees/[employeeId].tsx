@@ -59,9 +59,6 @@ const EmployeeView = () => {
       reports: reportsQuery.data,
     });
 
-    // console.log(currentMonthReports.map((report) => DateTime.fromISO(report.from_date).month));
-    // console.log(previousMonthReports.map((report) => DateTime.fromISO(report.from_date).month));
-
     const bonus = new BonusCalculatorServiceV2({
       reports: currentMonthReports,
       employee: employeeQuery.data,
@@ -79,6 +76,7 @@ const EmployeeView = () => {
     });
   }, [
     employeeQuery.data,
+    viewingMonth,
     employeeQuery.isSuccess,
     reportsQuery.isFetching,
     reportsQuery.data,

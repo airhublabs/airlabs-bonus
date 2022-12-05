@@ -53,21 +53,27 @@ export class BonusCalculatorServiceV2 {
 
   private checkForPreviousDangerousProject() {
     let isAssignedDangerousProject = false;
-    let dangerousProjectStartDate: string | undefined = undefined;
+    let hasLeftHomebase = false;
 
     return this.params.previousMonthReports.reduce((acc, report, i) => {
-      if (this.isDangerousProject(report) && !isAssignedDangerousProject) {
+      /* Has been assigned dangerous project */
+      if (this.isDangerousProject(report)) {
         isAssignedDangerousProject = true;
       }
 
+      /* Has left homebase */
+      if (this.isLeavingHomebase(report)) {
+        hasLeftHomebase = true;
+      }
+
       /* Has left homebase with assigned dangerous project. */
-      if (
-        this.isLeavingHomebase(report) &&
-        isAssignedDangerousProject &&
-        !dangerousProjectStartDate
-      ) {
-        dangerousProjectStartDate = report.start_date;
+      if (isAssignedDangerousProject && hasLeftHomebase) {
         acc = true;
+      }
+
+      if (this.isArrivingAtHomebase(report) && hasLeftHomebase) {
+        hasLeftHomebase = false;
+        acc = false;
       }
 
       return acc;
@@ -78,18 +84,20 @@ export class BonusCalculatorServiceV2 {
     let isAssignedDangerousProject = false;
     let hasLeftHomebase = false;
     let dangerousProjectStartDate: string | undefined = undefined;
+    let leftHomebaseDate: string | undefined = undefined;
     let hasPreviousDangerousProject = this.checkForPreviousDangerousProject();
 
     return this.params.reports.reduce((amount, report, i) => {
       if (this.isLeavingHomebase(report)) {
         hasLeftHomebase = true;
+        leftHomebaseDate = report.from_date;
+      }
+
+      if (hasLeftHomebase && this.isDangerousProject(report) && !dangerousProjectStartDate) {
+        dangerousProjectStartDate = leftHomebaseDate;
       }
 
       /* Dangerous project detected, signifies start of project */
-      if (hasLeftHomebase && this.isDangerousProject(report) && !dangerousProjectStartDate) {
-        dangerousProjectStartDate = report.start_date;
-      }
-
       if (this.isDangerousProject(report) && !isAssignedDangerousProject) {
         isAssignedDangerousProject = true;
       }
@@ -98,9 +106,10 @@ export class BonusCalculatorServiceV2 {
       if (
         this.isLeavingHomebase(report) &&
         isAssignedDangerousProject &&
+        hasLeftHomebase &&
         !dangerousProjectStartDate
       ) {
-        dangerousProjectStartDate = report.start_date;
+        dangerousProjectStartDate = leftHomebaseDate;
       }
 
       if (isAssignedDangerousProject && dangerousProjectStartDate) {
@@ -109,12 +118,14 @@ export class BonusCalculatorServiceV2 {
 
       if (this.isArrivingAtHomebase(report)) {
         hasLeftHomebase = false;
+        leftHomebaseDate = undefined;
       }
 
+      /* Is arriving at homebase with previous dangergours project */
       if (this.isArrivingAtHomebase(report) && hasPreviousDangerousProject) {
-        const firstOfMonthDate = DateTime.fromISO(report.from_date).startOf('month');
+        const firstOfMonthDate = DateTime.fromISO(report.start_date).startOf('month');
 
-        const bonusPayDays = DateTime.fromISO(report.from_date).diff(firstOfMonthDate, [
+        const bonusPayDays = DateTime.fromISO(report.start_date).diff(firstOfMonthDate, [
           'day',
         ]).days;
 
@@ -124,7 +135,7 @@ export class BonusCalculatorServiceV2 {
 
       /* Arrived at homebase with assigned dangerous project. Signifies end of project */
       if (
-        this.isArrivingAtHomebase(report) &&
+        (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
         isAssignedDangerousProject &&
         dangerousProjectStartDate
       ) {
@@ -133,35 +144,12 @@ export class BonusCalculatorServiceV2 {
           ['day']
         ).days;
 
-        amount += bonusPayDays;
-        isAssignedDangerousProject = false;
-        dangerousProjectStartDate = undefined;
-      }
-
-      /* End of a dangerous project with no start date in the current month */
-      if (this.isEndOfProjectInMiddleMonth({ report })) {
-        const firstOfMonthDate = DateTime.fromISO(report.from_date).startOf('month');
-
-        const bonusPayDays = DateTime.fromISO(report.from_date).diff(firstOfMonthDate, [
-          'day',
-        ]).days;
+        console.log('End of dangerous project', {
+          startDate: dangerousProjectStartDate,
+          endDate: report.to_date,
+        });
 
         amount += bonusPayDays;
-      }
-
-      // End of month. Check if they were still in a dangerous project. Add it to the bonus days.
-      if (
-        i === this.params.reports.length - 1 &&
-        isAssignedDangerousProject &&
-        dangerousProjectStartDate
-      ) {
-        const bonusPayDays =
-          DateTime.fromISO(report.to_date).diff(DateTime.fromISO(dangerousProjectStartDate), [
-            'day',
-          ]).days + 1;
-
-        amount += bonusPayDays;
-
         isAssignedDangerousProject = false;
         dangerousProjectStartDate = undefined;
       }
