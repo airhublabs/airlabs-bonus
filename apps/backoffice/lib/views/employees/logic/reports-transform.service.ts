@@ -21,6 +21,23 @@ export const removeRedundantDateFromReports = (reports: ReportsApi.ListResponseB
   });
 };
 
+const getMostTimeSpentBase = (params: {
+  startDate: string;
+  endDate: string;
+  departureBase: string;
+  arrivalBase: string;
+}) => {
+  const { startDate, departureBase, arrivalBase } = params;
+  const lDepartureDate = DateTime.fromISO(startDate);
+
+  const startOfDate = lDepartureDate.startOf('day');
+
+  const startDiff = lDepartureDate.diff(startOfDate, ['hour']);
+  const endDiff = 24 - startDiff.hours;
+
+  return startDiff.hours > endDiff ? departureBase : arrivalBase;
+};
+
 /**
  * Determins which base has the most time spent
  * @param reports Array of reports

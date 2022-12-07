@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/services/prisma.service';
+import { ReportUploadService } from '../reports/services/report-upload.service';
+import { BatchCreateEmployeeDto } from './dto/batch-create-employee.dto';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { EmployeeUploadService } from './services/employee-upload.service';
 
 interface ListParams {
   filters?: Prisma.EmployeeWhereInput;
@@ -18,6 +21,17 @@ export class EmployeesService {
     });
 
     return employee;
+  }
+
+  async batchCreate(batchCreateEmployeeDto: BatchCreateEmployeeDto[]) {
+    const reportUpload = new EmployeeUploadService(batchCreateEmployeeDto);
+    const convertedReports = reportUpload.convertReportToPrismaSchema();
+
+    const reports = await this.prisma.$transaction(
+      convertedReports.map((report) => this.prisma.employee.create({ data: report }))
+    );
+
+    return reports.length;
   }
 
   async list(params?: ListParams) {

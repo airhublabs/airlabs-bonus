@@ -1,0 +1,61 @@
+{
+  "Report": [
+    {
+      "EmpNo": "TTS",
+      "HumanResourceFullName": "TSOUFIS, THEODOROS",
+      "HumanResourceBRQ": "MLA FA1/A3/A4 FA1/A320",
+      "HumanResourceRank": "FA1",
+      "StartDate": "24-Sep-2022",
+      "ValidFromDate": "24-Sep-2022",
+      "ValidFromTime": "21:00:00",
+      "ValidToDate": "25-Sep-2022",
+      "ValidToTime": "20:59:00",
+      "Code": "OFF D",
+      "Registration": "",
+      "VehicleType": "",
+      "DepString": "ATH",
+      "ArrString": "ATH",
+      "ScheduledHoursDuration": "23:59:00",
+      "RosterDesignators": "",
+      "ProjectNameText": ""
+    },
+    {
+      "EmpNo": "TTS",
+      "HumanResourceFullName": "TSOUFIS, THEODOROS",
+      "HumanResourceBRQ": "MLA FA1/A3/A4 FA1/A320",
+      "HumanResourceRank": "FA1",
+      "StartDate": "28-Sep-2022",
+      "ValidFromDate": "28-Sep-2022",
+      "ValidFromTime": "21:00:00",
+      "ValidToDate": "29-Sep-2022",
+      "ValidToTime": "20:59:00",
+      "Code": "OFF C",
+      "Registration": "",
+      "VehicleType": "",
+      "DepString": "ATH",
+      "ArrString": "ATH",
+      "ScheduledHoursDuration": "23:59:00",
+      "RosterDesignators": "",
+      "ProjectNameText": ""
+    },
+    {
+      "EmpNo": "TTS",
+      "HumanResourceFullName": "TSOUFIS, THEODOROS",
+      "HumanResourceBRQ": "MLA FA1/A3/A4 FA1/A320",
+      "HumanResourceRank": "FA1",
+      "StartDate": "27-Sep-2022",
+      "ValidFromDate": "27-Sep-2022",
+      "ValidFromTime": "21:00:00",
+      "ValidToDate": "28-Sep-2022",
+      "ValidToTime": "20:59:00",
+      "Code": "OFF C",
+      "Registration": "",
+      "VehicleType": "",
+      "DepString": "ATH",
+      "ArrString": "ATH",
+      "ScheduledHoursDuration": "23:59:00",
+      "RosterDesignators": "",
+      "ProjectNameText": ""
+    }
+  ]
+}

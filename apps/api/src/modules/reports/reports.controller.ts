@@ -8,6 +8,12 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  UsePipes,
 } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
@@ -15,9 +21,15 @@ import { UpdateReportDto } from './dto/update-report.dto';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ReportEntity } from './entities/report.entity';
 import { ListReportsDto } from './dto/get-report.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Multer } from 'multer';
+import { TestingPipe } from '../../common/test.pipe';
+import { instanceToPlain } from 'class-transformer';
+import { validate, validateOrReject } from 'class-validator';
+import { BatchCreateReportDto } from './dto/batch-create-report.dto';
 
 @Controller()
-@ApiTags("Reports")
+@ApiTags('Reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
@@ -47,6 +59,25 @@ export class ReportsController {
         ],
       },
     });
+  }
+
+  @Get('/reports/bonus')
+  runBonusReport(@Query('month', ParseIntPipe) month: number) {
+    return this.reportsService.runReport(month);
+  }
+
+  @Post('reports/batch')
+  @UseInterceptors(FileInterceptor('reports'))
+  async batchUploadReports(
+    @UploadedFile(
+      new ParseFilePipe({ validators: [new FileTypeValidator({ fileType: 'application/json' })] })
+    )
+    reports: Express.Multer.File
+  ) {
+    const reportsJson = JSON.parse(reports.buffer.toString()) as { Report: BatchCreateReportDto[] };
+    const createdCount = await this.reportsService.batchCreate(reportsJson.Report);
+
+    return { count: createdCount };
   }
 
   @ApiOkResponse({ type: ReportEntity })

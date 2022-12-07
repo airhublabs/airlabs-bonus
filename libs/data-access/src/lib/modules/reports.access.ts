@@ -1,6 +1,6 @@
 import { ReportsApi } from '@airlabs-bonus/types';
-import { SchemaQuery } from 'libs/types/src/lib/utils.types';
 import { Request } from '../access';
+import axios from 'axios';
 
 interface ListParams {
   employeeId?: number;
@@ -18,15 +18,21 @@ export class Reports {
   }
 
   async retrive(reportId: number) {
-    const response = await this.request.get<ReportsApi.RetriveResponseBody>(
-      `/reports/${reportId}`
-    );
+    const response = await this.request.get<ReportsApi.RetriveResponseBody>(`/reports/${reportId}`);
 
     return response;
   }
 
   async create(data: ReportsApi.CreateData) {
     const response = await this.request.post<ReportsApi.CreateResponse>('/reports', data);
+
+    return response;
+  }
+
+  async batchCreate(data: any) {
+    const response = await this.request.post('/reports/batch', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
     return response;
   }

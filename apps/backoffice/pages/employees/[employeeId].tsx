@@ -1,26 +1,22 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import { BonusCalculatorServiceV2 } from '@airlabs-bonus/bonus-calculator';
 import { Button } from '@mui/material';
 import { Stack } from '@mui/system';
 import { DataGrid, GridEventListener, GridToolbarExport } from '@mui/x-data-grid';
-import api from 'apps/backoffice/lib/api/airlabs.api';
-import { useRetriveEmployee } from 'apps/backoffice/lib/api/employees/employees.query';
-import {
-  aggergateReportMonths,
-  useListReports,
-} from 'apps/backoffice/lib/api/reports/reports.query';
-import { useListDangerZones } from 'apps/backoffice/lib/api/zones/zones.query';
-import DataCard from 'apps/backoffice/lib/components/global/DataCard';
-import PageHeader from 'apps/backoffice/lib/components/header/PageHeader';
-import { EMPLOYEE_COLUMNS } from 'apps/backoffice/lib/views/employees/constants/employee-columns.constant';
-import EmployeeViewHeader from 'apps/backoffice/lib/views/employees/EmployeeViewHeader';
-import { transformReports } from 'apps/backoffice/lib/views/employees/logic/reports-transform.service';
-import ReportDialog from 'apps/backoffice/lib/views/employees/modals/ReportDialog';
-import MonthSelect, { MonthSelectProps } from 'apps/backoffice/lib/views/employees/MonthSelect';
-import { BonusCalculatorServiceV2 } from 'libs/bonus-calculator/src/lib/bonus-calculator.service';
-import { DateTime } from 'luxon';
 import { useRouter } from 'next/router';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
+import api from '../../lib/api/airlabs.api';
+import { useRetriveEmployee } from '../../lib/api/employees/employees.query';
+import { aggergateReportMonths, useListReports } from '../../lib/api/reports/reports.query';
+import { useListDangerZones } from '../../lib/api/zones/zones.query';
+import DataCard from '../../lib/components/global/DataCard';
+import PageHeader from '../../lib/components/header/PageHeader';
+import { EMPLOYEE_COLUMNS } from '../../lib/views/employees/constants/employee-columns.constant';
+import EmployeeViewHeader from '../../lib/views/employees/EmployeeViewHeader';
+import { transformReports } from '../../lib/views/employees/logic/reports-transform.service';
+import ReportDialog from '../../lib/views/employees/modals/ReportDialog';
+import MonthSelect, { MonthSelectProps } from '../../lib/views/employees/MonthSelect';
 
 const EmployeeView = () => {
   const { employeeId } = useRouter().query;
@@ -110,7 +106,7 @@ const EmployeeView = () => {
         <Stack direction="row" gap="var(--space-sm)">
           <DataCard
             title="Bonus Days"
-            value={Math.ceil(bonusData.days)}
+            value={Math.round(bonusData.days)}
             isLoading={reportsQuery.isLoading}
           />
           <DataCard

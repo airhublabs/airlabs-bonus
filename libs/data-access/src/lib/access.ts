@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { BonusCalculatorServiceV2 } from 'libs/bonus-calculator/src/lib/bonus-calculator.service';
 import { DangerZones } from './modules/danger-zone.access';
 import { Employees } from './modules/employees.access';
 import { Reports } from './modules/reports.access';
@@ -22,6 +21,7 @@ interface RequestParams {
 interface RequestData {
   params?: object;
   body?: object;
+  headers?: object;
 }
 
 export class Request {
@@ -48,6 +48,7 @@ export class Request {
       withCredentials: true,
       data: data.body,
       params: data.params,
+      headers: data.headers,
     });
 
     return response;
@@ -67,8 +68,12 @@ export class Request {
     return this.request<T>('get', path, { params: queryParams }, requestOptions);
   }
 
-  async post<T>(path: string, body: object, params?: object) {
-    return this.request<T>('post', path, { params, body });
+  async post<T>(path: string, body: object, params?: { params?: object; headers?: object }) {
+    return this.request<T>('post', path, {
+      params: params?.params,
+      headers: params?.headers,
+      body,
+    });
   }
 
   async patch<T>(path: string, body: object, params?: object) {
