@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import { ReportsApi } from '@airlabs-bonus/types';
 import { Button, TextField } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbarExport } from '@mui/x-data-grid';
 import { useQuery } from '@tanstack/react-query';
@@ -8,9 +9,10 @@ import { useListDangerZones } from '../lib/api/zones/zones.query';
 import PageHeader from '../lib/components/header/PageHeader';
 import MonthSelect, { MonthSelectProps } from '../lib/views/employees/MonthSelect';
 
-const BONUS_REPORTS_COLUMN: GridColDef[] = [
+const BONUS_REPORTS_COLUMN: GridColDef<ReportsApi.RunBonusReportBody[number]>[] = [
   {
     field: 'emp_no',
+    renderCell: (params) => <a href={`/employees/${params.row.id}`}>{params.value}</a>
   },
   {
     field: 'bonus',

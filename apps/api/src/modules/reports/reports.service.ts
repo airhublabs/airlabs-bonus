@@ -138,7 +138,7 @@ export class ReportsService {
 
       const days = bonus.getEligbleBonusHours();
 
-      return { emp_no: employee.emp_no, bonus: days, id: employee.emp_no  };
+      return { emp_no: employee.emp_no, bonus: days, id: employee.id  };
     });
     return {};
   }
