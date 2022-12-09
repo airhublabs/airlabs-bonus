@@ -1,5 +1,4 @@
 import { EmployeesApi, ReportsApi } from '@airlabs-bonus/types';
-import { Reports } from 'libs/data-access/src/lib/modules/reports.access';
 import { DateTime } from 'luxon';
 
 export interface BonusServiceParams {
@@ -31,7 +30,7 @@ export class BonusCalculatorServiceV2 {
 
   private isArrivingAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
     return (
-      // report.dep_string !== this.params.employee.homebase &&
+      report.dep_string !== this.params.employee.homebase &&
       report.arr_string === this.params.employee.homebase
     );
   }
@@ -81,13 +80,6 @@ export class BonusCalculatorServiceV2 {
     startDate: Date;
     endDate: Date;
   }) {
-    // console.log({
-    //   startDate: startDate.getDate(),
-    //   endDate: endDate.getDate(),
-    //   checkingDate: checkingDate.getDate(),
-    //   checkGreaterThanStart: checkingDate >= startDate,
-    //   checkLessThan: checkingDate <= endDate,
-    // });
     return checkingDate >= startDate && checkingDate <= endDate;
   }
 
@@ -115,6 +107,8 @@ export class BonusCalculatorServiceV2 {
     let leftHomebaseDate: string | undefined = undefined;
     let hasPreviousDangerousProject = this.checkForPreviousDangerousProject();
 
+    console.log({ hasPreviousDangerousProject });
+
     return this.params.reports.reduce((amount, report, i) => {
       if (this.isLeavingHomebase(report)) {
         hasLeftHomebase = true;
@@ -128,7 +122,6 @@ export class BonusCalculatorServiceV2 {
       /* Dangerous project detected, signifies start of project */
       if (this.isDangerousProject(report) && !isAssignedDangerousProject) {
         isAssignedDangerousProject = true;
-        // console.log("PROJECT A", {date: DateTime.fromISO(report.start_date).day})
       }
 
       /* Has left homebase with assigned dangerous project. */
@@ -141,20 +134,16 @@ export class BonusCalculatorServiceV2 {
         dangerousProjectStartDate = leftHomebaseDate;
       }
 
-      /* Commenet out while being replaced by more advanced highlighting function */
-      /* Pushes dangerous project days to be highlighted */
-      // if (isAssignedDangerousProject && dangerousProjectStartDate) {
-      //   this.dangerousProjectIds.push(report.id);
-      // }
-
       if (this.isArrivingAtHomebase(report)) {
         hasLeftHomebase = false;
         leftHomebaseDate = undefined;
-        console.log('Arrived', { date: DateTime.fromISO(report.start_date).day });
       }
 
       /* Is arriving at homebase with previous dangergours project */
-      if (this.isArrivingAtHomebase(report) && hasPreviousDangerousProject) {
+      if (
+        (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
+        hasPreviousDangerousProject
+      ) {
         const firstOfMonthDate = DateTime.fromISO(report.start_date).startOf('month');
 
         const bonusPayDays = DateTime.fromISO(report.start_date).diff(firstOfMonthDate, [
@@ -167,7 +156,6 @@ export class BonusCalculatorServiceV2 {
         });
 
         this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
-        console.log({ startDate: firstOfMonthDate.toISO(), endDate: report.start_date });
 
         amount += bonusPayDays;
         hasPreviousDangerousProject = false;

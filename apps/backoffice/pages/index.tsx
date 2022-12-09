@@ -5,12 +5,14 @@ import { DataGrid, GridColDef, GridToolbar } from '@mui/x-data-grid';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useListEmployees } from '../lib/api/employees/employees.query';
+import EmployeeUploadModal from '../lib/components/file-upload/EmployeeUploadModal';
 import FileUploadModal from '../lib/components/file-upload/FIleUploadModal';
 
 export function Index() {
   const employeesQuery = useListEmployees();
   const router = useRouter();
-  const [isFileUploadModalOpen, setFileUploadModalOpen] = useState(false);
+  const [isReportsUploadModalOpen, setReportsUploadModalOpen] = useState(false);
+  const [isEmployeeUploadModalOpen, setEmployeeUploadModalOpen] = useState(false);
 
   const columns: GridColDef[] = [
     { field: 'emp_no', headerName: 'Emp #' },
@@ -53,9 +55,13 @@ export function Index() {
             <Typography variant="body1">Calculatre cabin & flight crew danger bonuses</Typography>
           </Stack>
 
-          <Stack direction="row" alignItems="center">
-            <Button variant="contained" onClick={() => setFileUploadModalOpen(true)}>
+          <Stack direction="row" alignItems="center" gap="var(--space-2xs)">
+            <Button variant="contained" onClick={() => setReportsUploadModalOpen(true)}>
               Upload Reports
+            </Button>
+
+            <Button variant="contained" onClick={() => setEmployeeUploadModalOpen(true)}>
+              Upload Employees
             </Button>
 
             <Tooltip title="Change danger zone settings" arrow>
@@ -83,7 +89,14 @@ export function Index() {
         </div>
       </main>
 
-      <FileUploadModal open={isFileUploadModalOpen} onClose={() => setFileUploadModalOpen(false)} />
+      <FileUploadModal
+        open={isReportsUploadModalOpen}
+        onClose={() => setReportsUploadModalOpen(false)}
+      />
+      <EmployeeUploadModal
+        open={isEmployeeUploadModalOpen}
+        onClose={() => setEmployeeUploadModalOpen(false)}
+      />
 
       <style jsx>{`
         main {

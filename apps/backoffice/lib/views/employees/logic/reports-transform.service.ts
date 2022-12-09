@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { ReportsApi } from '@airlabs-bonus/types';
 import { parseStringDuration } from '@airlabs-bonus/utils';
 import { DateTime } from 'luxon';
@@ -38,16 +39,71 @@ const getMostTimeSpentBase = (params: {
   return startDiff.hours > endDiff ? departureBase : arrivalBase;
 };
 
+const getTimeSpentInBaseHours = (params: {
+  startDate: string;
+  endDate: string;
+  departureBase: string;
+  arrivalBase: string;
+}) => {
+  const { startDate, departureBase, arrivalBase } = params;
+  const lDepartureDate = DateTime.fromISO(startDate);
+  const startOfDate = lDepartureDate.startOf('day');
+  const startDiff = lDepartureDate.diff(startOfDate, ['hour']);
+
+  const endDiffInHours = 24 - startDiff.hours;
+  const startDiffInHours = 24 - startDiff.hours;
+
+  return { [departureBase]: startDiffInHours, [arrivalBase]: endDiffInHours };
+};
+
+const newGetTimeSPentInBase = (reports: ReportsApi.ListResponseBody) => {
+  const timeInBases = reports.reduce((acc: Record<string, number>, report, i) => {
+    const nextReport = reports?.[i + 1];
+
+    const departureDate = DateTime.fromISO(report.start_date);
+    const startOfDepartureDay = departureDate.startOf('day');
+
+    if (i === 0) {
+      /* First flight */
+      const flightStartHours = departureDate.diff(startOfDepartureDay, 'hour').hours;
+      acc[report.dep_string] = (acc?.[report.dep_string] || 0) + flightStartHours;
+      return acc;
+    }
+
+    if (nextReport) {
+      /* Middle flight */
+      const toDate = DateTime.fromISO(report.to_date);
+      const nextStartDate = DateTime.fromISO(report.start_date);
+
+      const timeUntilNextFlight = toDate.diff(nextStartDate, 'hour').hours;
+
+      if (timeUntilNextFlight >= 0)
+        acc[report.arr_string] = (acc?.[report.arr_string] || 0) + timeUntilNextFlight;
+      return acc;
+    }
+
+    /* Last flight */
+    const toDate = DateTime.fromISO(report.to_date);
+    const timeUntilEndOfDay = DateTime.fromISO(report.to_date).diff(toDate.endOf('day')).hours;
+
+    acc[report.arr_string] = (acc?.[report.arr_string] || 0) + timeUntilEndOfDay;
+
+    return acc;
+  }, {});
+
+  return timeInBases;
+};
+
 /**
  * Determins which base has the most time spent
  * @param reports Array of reports
  * @returns the base with the most time spent. IE. DXB or JFK
  */
-export const getMostTimeSpentHomebase = (reports: ReportsApi.ListResponseBody) => {
+export const getMostTimeSpentHomebaseV2 = (reports: ReportsApi.ListResponseBody) => {
   const hoursMap = reports.reduce((acc, report) => {
-    const { hours } = parseStringDuration(report.scheduled_hours_duration);
+    const timeInBases = newGetTimeSPentInBase(reports);
 
-    acc[report.dep_string] = hours;
+    acc = { ...acc, ...timeInBases };
     return acc;
   }, {});
 
@@ -59,15 +115,26 @@ export const getMostTimeSpentHomebase = (reports: ReportsApi.ListResponseBody) =
  * @param reports Array of reports to transform
  * @returns Transformed reports
  */
-export const transformMostTimeSpentHomebase = (reports: ReportsApi.ListResponseBody) => {
+export const transformMostTimeSpentHomebaseV2 = (reports: ReportsApi.ListResponseBody) => {
   let startTickingDate: string | undefined = undefined;
   let checkingReportArray: typeof reports[number][] = [];
 
   return reports.map((report, i) => {
     const nextReportDate = reports?.[i + 1]?.from_date;
-    const isFromDateEmpty = report.from_date !== '';
+    const isFromDateEmpty = report.from_date == '';
 
-    if (isFromDateEmpty && nextReportDate == '') {
+    const mostTimeSpentBase = getMostTimeSpentBase({
+      arrivalBase: report.arr_string,
+      departureBase: report.dep_string,
+      endDate: report.dep_string,
+      startDate: report.start_date,
+    });
+
+    //@ts-ignore
+
+    if (nextReportDate !== '') report.most_visited = mostTimeSpentBase;
+
+    if (!isFromDateEmpty && nextReportDate == '') {
       startTickingDate = report.from_date;
     }
 
@@ -76,12 +143,10 @@ export const transformMostTimeSpentHomebase = (reports: ReportsApi.ListResponseB
     }
 
     if (startTickingDate && nextReportDate !== '') {
-      const mostTimeSpentHomebase = getMostTimeSpentHomebase(checkingReportArray);
+      const mostTimeSpentHomebase = getMostTimeSpentHomebaseV2(checkingReportArray);
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore
+      // @ts-ignore
       report.most_visited = mostTimeSpentHomebase;
-
       startTickingDate = undefined;
       checkingReportArray = [];
     }
@@ -99,7 +164,7 @@ export const transformReports = (reports: ReportsApi.ListResponseBody) => {
   if (!reports) return;
 
   const reportsWithRedudentDatesStripped = removeRedundantDateFromReports(reports);
-  const reportsWithMostVisited = transformMostTimeSpentHomebase(reportsWithRedudentDatesStripped);
+  const reportsWithMostVisited = transformMostTimeSpentHomebaseV2(reportsWithRedudentDatesStripped);
 
   return reportsWithMostVisited;
 };

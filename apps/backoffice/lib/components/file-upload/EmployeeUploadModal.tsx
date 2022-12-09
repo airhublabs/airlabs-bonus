@@ -15,19 +15,26 @@ import UploadZone, { ExpectedReportFile } from './UploadZone';
 import axios from 'axios';
 import { LoadingButton } from '@mui/lab';
 
-export interface FileUploadModalProps {
+export interface EmployeeUploadModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-const appendIdToFileUploadReports = (reports: BatchCreateReportDto[]) => {
+export interface ExepectedEmployeeFile {
+  EmpNo: string;
+  HomeBases: string;
+  EmpType: string;
+}
+
+const appendIdToFileUploadReports = (reports: ExepectedEmployeeFile[]) => {
   return reports.map((report) => ({ ...report, id: crypto.randomUUID() }));
 };
 
-const FileUploadModal: FC<FileUploadModalProps> = ({ open, onClose, ...props }) => {
+const EmployeeUploadModal: FC<EmployeeUploadModalProps> = ({ open, onClose, ...props }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const [previewData, setPreviewData] = useState<BatchCreateReportDto[]>([]);
+  const [previewData, setPreviewData] = useState<ExepectedEmployeeFile[]>([]);
   const [previewDataCount, setPreviewDataCount] = useState(0);
+  /* TODO: Swap to ref */
   const [reportsFile, setReportsFile] = useState<File | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingReports, setIsUploadingReports] = useState(false);
@@ -47,13 +54,13 @@ const FileUploadModal: FC<FileUploadModalProps> = ({ open, onClose, ...props }) 
 
     reader.onloadend = () => {
       const result = reader.result;
-      const resultJson = JSON.parse(result.toString()) as ExpectedReportFile;
+      const resultJson = JSON.parse(result.toString()) as ExepectedEmployeeFile[];
 
-      if (!resultJson?.Report?.length)
+      if (!resultJson?.length)
         return enqueueSnackbar('Invalid file upload format, please try again');
 
-      setPreviewData(resultJson.Report.slice(0, 250));
-      setPreviewDataCount(resultJson.Report.length);
+      setPreviewData(resultJson.slice(0, 250));
+      setPreviewDataCount(resultJson.length);
       setReportsFile(file);
       setIsUploadingReports(false);
     };
@@ -68,11 +75,11 @@ const FileUploadModal: FC<FileUploadModalProps> = ({ open, onClose, ...props }) 
     const formData = new FormData();
     if (!reportsFile) return;
 
-    formData.append('reports', reportsFile);
+    formData.append('employees', reportsFile);
 
     try {
       setIsSubmitting(true);
-      const response = await axios.post(`${HOST_URL}/v1/reports/batch`, formData, {
+      const response = await axios.post(`${HOST_URL}/v1/employees/batch`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -88,7 +95,7 @@ const FileUploadModal: FC<FileUploadModalProps> = ({ open, onClose, ...props }) 
   return (
     <>
       <Dialog open={open} onClose={onCloseModal} maxWidth="lg" fullWidth>
-        <DialogTitle variant="h2">Upload JSON File</DialogTitle>
+        <DialogTitle variant="h2">Upload Employee JSON File</DialogTitle>
 
         <DialogContent>
           <DialogContentText pb="var(--space-xs)" maxWidth="65ch">
@@ -125,4 +132,4 @@ const FileUploadModal: FC<FileUploadModalProps> = ({ open, onClose, ...props }) 
   );
 };
 
-export default FileUploadModal;
+export default EmployeeUploadModal;

@@ -106,7 +106,7 @@ const EmployeeView = () => {
         <Stack direction="row" gap="var(--space-sm)">
           <DataCard
             title="Bonus Days"
-            value={Math.round(bonusData.days)}
+            value={Math.ceil(bonusData.days)}
             isLoading={reportsQuery.isLoading}
           />
           <DataCard

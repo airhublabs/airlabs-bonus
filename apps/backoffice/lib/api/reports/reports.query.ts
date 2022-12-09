@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { ReportsApi } from '@airlabs-bonus/types';
 import { useQuery } from '@tanstack/react-query';
 import { DateTime } from 'luxon';
 import { endOfMonthDate, startOfMonthDate } from '../../utils/date.utils';
 import api from '../airlabs.api';
-
 
 export const useListReports = (params: { employeeId: number; month: number }) => {
   const fetchReports = async () =>
@@ -33,6 +33,11 @@ interface AggergateReportReturn {
   previousMonthReports: ReportsApi.ListResponseBody;
 }
 
+interface AggergateReportReturn {
+  currentMonthReports: ReportsApi.ListResponseBody;
+  previousMonthReports: ReportsApi.ListResponseBody;
+}
+
 export const aggergateReportMonths = (params: {
   currentMonth: number;
   reports: ReportsApi.ListResponseBody;
@@ -44,14 +49,50 @@ export const aggergateReportMonths = (params: {
       const lStartDate = DateTime.fromISO(report.start_date);
 
       if (lStartDate.month === params.currentMonth) {
-        acc.currentMonthReports.push(report);
+        acc.currentMonthReports.push({
+          ...report,
+          start_date: report.start_date,
+          to_date: report.to_date,
+          from_date: report.from_date,
+        });
         return acc;
       }
 
-      acc.previousMonthReports.push(report);
+      if (lStartDate.month === params.currentMonth - 1) {
+        acc.previousMonthReports.push({
+          ...report,
+          start_date: report.start_date,
+          to_date: report.to_date,
+          from_date: report.from_date,
+        });
+      }
 
       return acc;
     },
     { currentMonthReports: [], previousMonthReports: [] }
   );
 };
+
+/* Old code commented out */
+// export const aggergateReportMonths = (params: {
+//   currentMonth: number;
+//   reports: ReportsApi.ListResponseBody;
+// }): AggergateReportReturn => {
+//   if (!params?.reports) return { currentMonthReports: [], previousMonthReports: [] };
+
+//   return params.reports.reduce(
+//     (acc: AggergateReportReturn, report) => {
+//       const lStartDate = DateTime.fromISO(report.start_date);
+
+//       if (lStartDate.month === params.currentMonth) {
+//         acc.currentMonthReports.push(report);
+//         return acc;
+//       }
+
+//       acc.previousMonthReports.push(report);
+
+//       return acc;
+//     },
+//     { currentMonthReports: [], previousMonthReports: [] }
+//   );
+// };

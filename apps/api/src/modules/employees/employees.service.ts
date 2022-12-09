@@ -28,7 +28,9 @@ export class EmployeesService {
     const convertedReports = reportUpload.convertReportToPrismaSchema();
 
     const reports = await this.prisma.$transaction(
-      convertedReports.map((report) => this.prisma.employee.create({ data: report }))
+      convertedReports.map((report) =>
+        this.prisma.employee.upsert({ where: { emp_no: report.emp_no }, create: report, update: report })
+      )
     );
 
     return reports.length;

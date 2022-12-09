@@ -29,7 +29,7 @@ const UploadPreviewTable: FC<UploadPreviewTableProps> = ({ columns, rows, count,
   const generateColumns = (): GridColDef[] => {
     // return columns.map((column) => ({ field: column, width: PRESET_COLUMN_SIZES?.[column] || 50 }));
     return columns.map((column) => {
-      return { field: column, width: PRESET_COLUMN_SIZES?.[column] || 50 };
+      return { field: column, width: PRESET_COLUMN_SIZES?.[column] || 100 };
     });
   };
 

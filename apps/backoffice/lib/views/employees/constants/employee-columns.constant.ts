@@ -1,13 +1,31 @@
+import { ReportsApi } from '@airlabs-bonus/types';
 import { GridColDef } from '@mui/x-data-grid';
-import { stringifyISO } from 'apps/backoffice/lib/utils/date.utils';
+import { DateTime } from 'luxon';
+import { stringifyISO } from '../../../utils/date.utils';
 
-export const EMPLOYEE_COLUMNS: GridColDef[] = [
+export const EMPLOYEE_COLUMNS: GridColDef<ReportsApi.RetriveResponseBody>[] = [
   {
     field: 'from_date',
     headerName: 'From',
     editable: true,
     description: 'Departure date/project start date',
     valueFormatter: (params) => stringifyISO(params.value),
+  },
+  {
+    field: 'From Time',
+    renderCell: (params) => {
+      const startTime = DateTime.fromISO(params.row.start_date);
+
+      return startTime.toLocal().toFormat('h:mm a');
+    },
+  },
+  {
+    field: 'To Time',
+    renderCell: (params) => {
+      const toTime = DateTime.fromISO(params.row.to_date);
+
+      return toTime.toLocal().toFormat('h:mm a');
+    },
   },
   { field: 'id', headerName: 'ID', width: 90 },
   {
@@ -37,5 +55,9 @@ export const EMPLOYEE_COLUMNS: GridColDef[] = [
     editable: true,
     description: 'Vehicle used for the project.',
   },
-  {field: "most_visited", headerName: "Most visited", description: "Most visted base in multi-project days"},
+  {
+    field: 'most_visited',
+    headerName: 'Most visited',
+    description: 'Most visted base in multi-project days',
+  },
 ];
