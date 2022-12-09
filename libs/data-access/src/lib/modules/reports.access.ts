@@ -7,12 +7,24 @@ interface ListParams {
   query?: ReportsApi.ListQuery;
 }
 
+interface BonusReportParams {
+  month: number;
+}
+
 export class Reports {
   constructor(private request: Request) {}
 
   async list(params?: ListParams) {
     const URL = params?.employeeId ? `/employees/${params.employeeId}/reports` : '/reports';
     const response = await this.request.get<ReportsApi.ListResponseBody>(URL, params?.query);
+
+    return response;
+  }
+
+  async runReport(params: BonusReportParams) {
+    const response = await this.request.get<ReportsApi.ListResponseBody>('/reports/bonus', {
+      month: params.month,
+    });
 
     return response;
   }

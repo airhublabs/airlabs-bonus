@@ -14,6 +14,9 @@ export interface paths {
     get: operations["EmployeesController_list"];
     post: operations["EmployeesController_create"];
   };
+  "/v1/employees/batch": {
+    post: operations["EmployeesController_batchUploadReports"];
+  };
   "/v1/employees/{id}": {
     get: operations["EmployeesController_retrive"];
     delete: operations["EmployeesController_remove"];
@@ -25,6 +28,12 @@ export interface paths {
   };
   "/v1/employees/{employeeId}/reports": {
     get: operations["ReportsController_listByEmployee"];
+  };
+  "/v1/reports/bonus": {
+    get: operations["ReportsController_runBonusReport"];
+  };
+  "/v1/reports/batch": {
+    post: operations["ReportsController_batchUploadReports"];
   };
   "/v1/reports/{id}": {
     get: operations["ReportsController_retrive"];
@@ -93,6 +102,10 @@ export interface components {
       scheduled_hours_duration: string;
       code: string;
     };
+    BatchGetReportDto: {
+      emp_no: string;
+      bonus: number;
+    };
     UpdateReportDto: {
       start_date?: string;
       from_date?: string;
@@ -148,6 +161,12 @@ export interface operations {
       content: {
         "application/json": components["schemas"]["CreateEmployeeDto"];
       };
+    };
+  };
+  EmployeesController_batchUploadReports: {
+    parameters: {};
+    responses: {
+      201: unknown;
     };
   };
   EmployeesController_retrive: {
@@ -238,6 +257,26 @@ export interface operations {
           "application/json": components["schemas"]["ReportEntity"][];
         };
       };
+    };
+  };
+  ReportsController_runBonusReport: {
+    parameters: {
+      query: {
+        month: number;
+      };
+    };
+    responses: {
+      200: {
+        content: {
+          "application/json": components["schemas"]["BatchGetReportDto"][];
+        };
+      };
+    };
+  };
+  ReportsController_batchUploadReports: {
+    parameters: {};
+    responses: {
+      201: unknown;
     };
   };
   ReportsController_retrive: {

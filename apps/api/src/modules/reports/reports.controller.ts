@@ -11,9 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseFilePipe,
-  MaxFileSizeValidator,
   FileTypeValidator,
-  UsePipes,
 } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
@@ -23,10 +21,8 @@ import { ReportEntity } from './entities/report.entity';
 import { ListReportsDto } from './dto/get-report.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Multer } from 'multer';
-import { TestingPipe } from '../../common/test.pipe';
-import { instanceToPlain } from 'class-transformer';
-import { validate, validateOrReject } from 'class-validator';
 import { BatchCreateReportDto } from './dto/batch-create-report.dto';
+import { BatchGetReportDto } from './dto/batch-get-report.dto';
 
 @Controller()
 @ApiTags('Reports')
@@ -61,6 +57,7 @@ export class ReportsController {
     });
   }
 
+  @ApiOkResponse({ type: BatchGetReportDto, isArray: true })
   @Get('/reports/bonus')
   runBonusReport(@Query('month', ParseIntPipe) month: number) {
     return this.reportsService.runReport(month);

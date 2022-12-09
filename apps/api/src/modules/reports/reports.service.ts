@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import { BonusCalculatorServiceV2 } from '@airlabs-bonus/bonus-calculator';
 import { ReportsApi } from '@airlabs-bonus/types';
 import { Injectable } from '@nestjs/common';
 import { Prisma, Report } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { ApiError } from '../../common/errors/api.error';
+import { currentMonth, endOfMonthDate, startOfMonthDate } from '../../common/helpers/date.utils';
 import { PrismaService } from '../../common/services/prisma.service';
 import { BatchCreateReportDto } from './dto/batch-create-report.dto';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { ReportCreatorService } from './services/report-creator.service';
 import { ReportUploadService } from './services/report-upload.service';
-// import { BonusCalculatorServiceV2 } from '@airlabs-bonus/bonus-calculator';
 
 interface ListParams {
   filter?: Prisma.ReportWhereInput;
@@ -29,7 +30,7 @@ export const aggergateReportMonths = (params: {
 
   return params.reports.reduce(
     (acc: AggergateReportReturn, report) => {
-      const lStartDate = DateTime.fromJSDate(report.start_date);
+      const lStartDate = DateTime.fromISO(report.start_date.toISOString());
 
       if (lStartDate.month === params.currentMonth) {
         // @ts-ignore
@@ -87,11 +88,6 @@ export class ReportsService {
     const reportUpload = new ReportUploadService(batchCreateReportDto);
     const convertedReports = reportUpload.convertReportToPrismaSchema();
 
-    // const reports = await this.prisma.report.createMany({
-    //   data: convertedReports,
-    //   skipDuplicates: true,
-    // });
-
     const reports = await this.prisma.$transaction(
       convertedReports.map((report) => this.prisma.report.create({ data: report }))
     );
@@ -112,26 +108,38 @@ export class ReportsService {
   }
 
   async runReport(month: number) {
-    const employees = await this.prisma.employee.findMany({ where: {}, include: { Report: true } });
+    const employees = await this.prisma.employee.findMany({
+      include: {
+        Report: {
+          where: {
+            start_date: {
+              gte: startOfMonthDate(month - 1).toISO(),
+              lte: endOfMonthDate(month).toISO(),
+            },
+          },
+          orderBy: { start_date: 'asc' },
+        },
+      },
+    });
 
-    // return employees.map((employee) => {
-    //   const { currentMonthReports, previousMonthReports } = aggergateReportMonths({
-    //     reports: employee.Report,
-    //     currentMonth: month,
-    //   });
+    return employees.map((employee) => {
+      const { currentMonthReports, previousMonthReports } = aggergateReportMonths({
+        reports: employee.Report,
+        currentMonth: month,
+      });
 
-    //   const bonus = new BonusCalculatorServiceV2({
-    //     dangerZones: [],
-    //     employee: employee,
-    //     hazardPayRate: 25.5,
-    //     previousMonthReports: previousMonthReports,
-    //     reports: currentMonthReports,
-    //   });
+      const bonus = new BonusCalculatorServiceV2({
+        dangerZones: ['DSS', 'EBL', 'LOS'],
+        employee: employee,
+        hazardPayRate: 25.5,
+        previousMonthReports: previousMonthReports,
+        reports: currentMonthReports,
+      });
 
-    //   const days = bonus.getEligbleBonusHours();
+      const days = bonus.getEligbleBonusHours();
 
-    //   return { emp_no: employee.emp_no, bonus: days };
-    // });
+      return { emp_no: employee.emp_no, bonus: Math.ceil(days), id: employee.emp_no  };
+    });
     return {};
   }
 

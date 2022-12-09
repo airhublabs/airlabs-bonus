@@ -56,11 +56,15 @@ export function Index() {
           </Stack>
 
           <Stack direction="row" alignItems="center" gap="var(--space-2xs)">
+
             <Button variant="contained" onClick={() => setReportsUploadModalOpen(true)}>
+              Run Report
+            </Button>
+            <Button variant="outlined" onClick={() => setReportsUploadModalOpen(true)}>
               Upload Reports
             </Button>
 
-            <Button variant="contained" onClick={() => setEmployeeUploadModalOpen(true)}>
+            <Button variant="outlined" onClick={() => setEmployeeUploadModalOpen(true)}>
               Upload Employees
             </Button>
 
@@ -74,7 +78,6 @@ export function Index() {
 
         <div className="table-container">
           <Stack gap="var(--space-xs)">
-            <TextField name="code" placeholder="Search by code..." variant="outlined" />
             <div className="data-grid-wrap">
               <DataGrid
                 rows={employeesQuery?.data || []}

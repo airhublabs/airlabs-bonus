@@ -16,6 +16,7 @@ COPY /apps/api ./apps/api
 # COPY REQUIRED PACKAGES
 COPY /libs/types ./libs/types
 COPY /libs/utils ./libs/utils
+COPY /libs/bonus-calculator ./libs/bonus-calculator
 
 # BUILD
 RUN npx prisma generate

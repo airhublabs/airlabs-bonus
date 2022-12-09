@@ -9,7 +9,7 @@ export interface BonusServiceParams {
   dangerZones: string[];
 }
 
-const DEFAULT_DANGER_ZONES = ['ERBL', 'SNGL3', 'SNGL4', 'DSS', 'EBL'];
+const DEFAULT_DANGER_ZONES = ['ERBL', 'SNGL3', 'SNGL4', 'DSS', 'EBL', 'LOS'];
 
 export class BonusCalculatorServiceV2 {
   public dangerousProjectIds!: number[];
@@ -62,8 +62,10 @@ export class BonusCalculatorServiceV2 {
         acc = true;
       }
 
-      if (this.isArrivingAtHomebase(report) && hasLeftHomebase) {
+      /* TODO: Check change (removed && hasLeftHomebase) */
+      if (this.isArrivingAtHomebase(report)) {
         hasLeftHomebase = false;
+        isAssignedDangerousProject = false
         acc = false;
       }
 
@@ -107,8 +109,6 @@ export class BonusCalculatorServiceV2 {
     let leftHomebaseDate: string | undefined = undefined;
     let hasPreviousDangerousProject = this.checkForPreviousDangerousProject();
 
-    console.log({ hasPreviousDangerousProject });
-
     return this.params.reports.reduce((amount, report, i) => {
       if (this.isLeavingHomebase(report)) {
         hasLeftHomebase = true;
@@ -122,6 +122,7 @@ export class BonusCalculatorServiceV2 {
       /* Dangerous project detected, signifies start of project */
       if (this.isDangerousProject(report) && !isAssignedDangerousProject) {
         isAssignedDangerousProject = true;
+        console.log('Assigned dangerous', { id: report.id, date: report.start_date });
       }
 
       /* Has left homebase with assigned dangerous project. */
@@ -131,12 +132,15 @@ export class BonusCalculatorServiceV2 {
         hasLeftHomebase &&
         !dangerousProjectStartDate
       ) {
+        console.log('Dangeorus start', { id: report.id, date: report.start_date });
         dangerousProjectStartDate = leftHomebaseDate;
       }
 
       if (this.isArrivingAtHomebase(report)) {
         hasLeftHomebase = false;
         leftHomebaseDate = undefined;
+        isAssignedDangerousProject = false;
+        console.log('Arrived home', { id: report.id, date: report.start_date });
       }
 
       /* Is arriving at homebase with previous dangergours project */
@@ -146,13 +150,18 @@ export class BonusCalculatorServiceV2 {
       ) {
         const firstOfMonthDate = DateTime.fromISO(report.start_date).startOf('month');
 
-        const bonusPayDays = DateTime.fromISO(report.start_date).diff(firstOfMonthDate, [
-          'day',
-        ]).days;
+        const bonusPay = DateTime.fromISO(report.start_date).diff(firstOfMonthDate, ['day']);
+        const bonusPayDays = bonusPay.as('day');
 
         const dangerousIds = this.getDangerousIds({
           dangerousStart: firstOfMonthDate.toISO(),
           endDate: report.start_date,
+        });
+
+        console.log('End of dangerous project with previous', {
+          startDate: firstOfMonthDate.toISO(),
+          endDate: report.start_date,
+          bonusPay: bonusPay.days,
         });
 
         this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
@@ -170,13 +179,15 @@ export class BonusCalculatorServiceV2 {
         dangerousProjectStartDate
       ) {
         const lDangerousProjectStartDate = DateTime.fromISO(dangerousProjectStartDate);
-        const lStartDate = DateTime.fromISO(report.to_date);
+        const lStartDate = DateTime.fromISO(report.start_date);
 
-        const bonusPayDays = lStartDate.diff(lDangerousProjectStartDate, ['day']).days;
+        const bonusPay = lStartDate.diff(lDangerousProjectStartDate, ['day']);
+        const bonusPayDays = bonusPay.as('day');
 
         console.log('End of dangerous project', {
           startDate: dangerousProjectStartDate,
           endDate: report.start_date,
+          bonusPay,
         });
 
         const dangerousIds = this.getDangerousIds({
