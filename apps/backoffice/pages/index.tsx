@@ -57,7 +57,7 @@ export function Index() {
 
           <Stack direction="row" alignItems="center" gap="var(--space-2xs)">
 
-            <Button variant="contained" onClick={() => setReportsUploadModalOpen(true)}>
+            <Button variant="contained" href="/report">
               Run Report
             </Button>
             <Button variant="outlined" onClick={() => setReportsUploadModalOpen(true)}>

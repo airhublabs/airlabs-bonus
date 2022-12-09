@@ -60,9 +60,11 @@ const Report = () => {
         <MonthSelect onChange={handleChangeEvent} month={viewingMonth} key="month" />
 
         <TextField
-          placeholder="Search by code..."
-          label="Code"
+          type="search"
+          placeholder="Search by Employee Number..."
+          label="Employe number"
           variant="outlined"
+
           onChange={(e) => setFilterEmpNp(e.target.value)}
         />
         <div className="data-grid-wrap">

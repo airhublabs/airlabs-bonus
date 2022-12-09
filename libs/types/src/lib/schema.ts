@@ -103,6 +103,7 @@ export interface components {
       code: string;
     };
     BatchGetReportDto: {
+      id: string;
       emp_no: string;
       bonus: number;
     };

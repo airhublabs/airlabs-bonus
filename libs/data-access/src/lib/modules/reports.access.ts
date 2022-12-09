@@ -22,7 +22,7 @@ export class Reports {
   }
 
   async runReport(params: BonusReportParams) {
-    const response = await this.request.get<ReportsApi.ListResponseBody>('/reports/bonus', {
+    const response = await this.request.get<ReportsApi.RunBonusReportBody>('/reports/bonus', {
       month: params.month,
     });
 

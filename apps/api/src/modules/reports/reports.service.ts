@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, Report } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { ApiError } from '../../common/errors/api.error';
-import { currentMonth, endOfMonthDate, startOfMonthDate } from '../../common/helpers/date.utils';
+import { endOfMonthDate, startOfMonthDate } from '../../common/helpers/date.utils';
 import { PrismaService } from '../../common/services/prisma.service';
 import { BatchCreateReportDto } from './dto/batch-create-report.dto';
 import { CreateReportDto } from './dto/create-report.dto';
@@ -138,7 +138,7 @@ export class ReportsService {
 
       const days = bonus.getEligbleBonusHours();
 
-      return { emp_no: employee.emp_no, bonus: Math.ceil(days), id: employee.emp_no  };
+      return { emp_no: employee.emp_no, bonus: days, id: employee.emp_no  };
     });
     return {};
   }

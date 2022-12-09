@@ -3,6 +3,7 @@ import { SchemaCreateResponseBody, SchemaQuery, SchemaRequestBody, SchemaRespons
 /* ------- LIST ------- */
 export type ListResponseBody = SchemaResponseBody<'ReportsController_list'>;
 export type ListQuery = SchemaQuery<'ReportsController_listByEmployee'>;
+export type RunBonusReportBody = SchemaResponseBody<'ReportsController_runBonusReport'>;
 
 /* ------- GET ------- */
 export type RetriveResponseBody = SchemaResponseBody<'ReportsController_retrive'>;
