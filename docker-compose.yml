@@ -1,0 +1,31 @@
+version: '3.9'
+services:
+  databse:
+    image: postgres:14.1-alpine
+    container_name: airlabs-psql
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  backoffice:
+    container_name: airlabs-backoffice
+    hostname: backoffice
+    build:
+      context: .
+      dockerfile: ./apps/backoffice/Dockerfile
+
+  api:
+    container_name: airlabs-api
+    hostname: api
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+
+volumes:
+  airlabs-psql:
+    driver: local
