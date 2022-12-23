@@ -1,0 +1,23 @@
+export const CSV_FIELDS = [
+  'Period',
+  'Name',
+  'EmpNo',
+  'Shortcode',
+  'BRQ',
+  'Date',
+  'Des',
+  'Code',
+  'Type',
+  'Registration',
+  'Dep',
+  'Arr',
+  'CI',
+  'STD',
+  'ATD',
+  'STA',
+  'ATA',
+  'CO',
+  'Duty',
+  'NightFDP',
+  'Block'
+];
