@@ -2,7 +2,7 @@ version: '3.9'
 services:
   databse:
     image: postgres:14.1-alpine
-    container_name: airlabs-psql
+    container_name: airhublabs-psql
     restart: always
     environment:
       - POSTGRES_USER=postgres
@@ -13,14 +13,14 @@ services:
       - 5432:5432
 
   backoffice:
-    container_name: airlabs-backoffice
+    container_name: airhublabs-backoffice
     hostname: backoffice
     build:
       context: .
       dockerfile: ./apps/backoffice/Dockerfile
 
   api:
-    container_name: airlabs-api
+    container_name: airhublabs-api
     hostname: api
     build:
       context: .

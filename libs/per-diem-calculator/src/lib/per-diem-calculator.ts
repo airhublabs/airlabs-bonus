@@ -12,5 +12,4 @@ export class PerDiemCalculatorService extends CalculatorService {
   constructor(params: PerDiuemCalculatorParams) {
     super({ employee: params.employee, reports: params.reports });
   }
-
 }
