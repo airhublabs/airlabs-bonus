@@ -52,6 +52,7 @@ export class BonusCalculatorServiceV2 {
         isAssignedDangerousProject = true;
       }
 
+
       /* Has left homebase */
       if (this.isLeavingHomebase(report)) {
         hasLeftHomebase = true;

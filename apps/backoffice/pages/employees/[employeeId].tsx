@@ -17,10 +17,17 @@ import EmployeeViewHeader from '../../lib/views/employees/EmployeeViewHeader';
 import { transformReports } from '../../lib/views/employees/logic/reports-transform.service';
 import ReportDialog from '../../lib/views/employees/modals/ReportDialog';
 import MonthSelect, { MonthSelectProps } from '../../lib/views/employees/MonthSelect';
+import { ScanningService } from '@airlabs-bonus/calculator-logic';
+import { number } from 'zod';
 
 const EmployeeView = () => {
   const { employeeId } = useRouter().query;
-  const [bonusData, setBonusData] = useState({ amount: 0, days: 0, dangerousProjectIds: [] });
+  const [bonusData, setBonusData] = useState({
+    amount: 0,
+    secuirtyDays: 0,
+    perDiemDays: 0,
+    dangerousProjectIds: [],
+  });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [viewingMonth, setViewingMonth] = useState<number>(9);
   const { enqueueSnackbar } = useSnackbar();
@@ -55,19 +62,28 @@ const EmployeeView = () => {
       reports: reportsQuery.data,
     });
 
-    const bonus = new BonusCalculatorServiceV2({
-      reports: currentMonthReports,
+    // const bonus = new BonusCalculatorServiceV2({
+    //   reports: currentMonthReports,
+    //   employee: employeeQuery.data,
+    //   previousMonthReports: previousMonthReports,
+    //   hazardPayRate: 25.5,
+    //   dangerZones: dangerZonesQuery?.data?.map((data) => data.zone),
+    // });
+
+    const bonus = new ScanningService({
+      dangerZones: ['EBL', 'DSS', 'SNGL3'],
       employee: employeeQuery.data,
-      previousMonthReports: previousMonthReports,
-      hazardPayRate: 25.5,
-      dangerZones: dangerZonesQuery?.data?.map((data) => data.zone),
+      reports: currentMonthReports,
     });
 
-    const bonusDays = bonus.getEligbleBonusHours();
+    // const bonusDays = bonus.getEligbleBonusHours();
+
+    const bonusDays = bonus.runScan();
 
     setBonusData({
-      days: bonusDays,
-      amount: bonus.getMonthsBothPay(),
+      secuirtyDays: bonusDays.secruityBonusDays,
+      amount: bonusDays.secruityBonusDays * 25.5,
+      perDiemDays: bonusDays.perDiem,
       dangerousProjectIds: bonus.dangerousProjectIds,
     });
   }, [
@@ -106,7 +122,12 @@ const EmployeeView = () => {
         <Stack direction="row" gap="var(--space-sm)">
           <DataCard
             title="Bonus Days"
-            value={Math.ceil(bonusData.days)}
+            value={Math.ceil(bonusData.secuirtyDays)}
+            isLoading={reportsQuery.isLoading}
+          />
+          <DataCard
+            title="Per Diem"
+            value={Math.ceil(bonusData.perDiemDays)}
             isLoading={reportsQuery.isLoading}
           />
           <DataCard

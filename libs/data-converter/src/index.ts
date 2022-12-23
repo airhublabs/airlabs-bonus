@@ -8,7 +8,7 @@ const transformer = new DataTransformer({
   exporter: new CSVExporter(),
   // Example with JSON
   importer: new CSVImporterService({
-    csvFilePath: join(process.cwd(), './src/data/cc_roster_csv.csv'),
+    csvFilePath: join(process.cwd(), './data/cc_roster_csv.csv'),
   }),
   // importer: new JSONImporterService({data: report})
 });

@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { CSV_FIELDS } from '../fields.constant';
 import { DataExporter } from './data-exporter.service';
-import { Roster, TransformedRoster } from './data-transformer';
+import { Roster, TransformedRosterV2 } from './data-transformer';
 import { FileImporterService } from './importer/csv-importer.service';
 import { ImporterService } from './importer/json-importer.service';
 
@@ -74,7 +74,7 @@ export class DataTransformer {
       return 'time';
     }
 
-    if (!!parseInt(checkingColumn)) {
+    if (!isNaN(parseInt(checkingColumn))) {
       this.columnTypeMap.set(column, 'number');
       return 'number';
     }
@@ -118,7 +118,7 @@ export class DataTransformer {
     }).isValid;
   }
 
-  private mapReport(input: Roster, empData: Employee & { date: string }): TransformedRoster {
+  private mapReport(input: Roster, empData: Employee & { date: string }): TransformedRosterV2 {
     const unknownFieldValue = 'Unset';
     const formattedStd = this.formatTime(input.TimeText_ValidFrom);
     const formattedSta = this.formatTime(input.TimeText_ValidToString);
@@ -132,35 +132,40 @@ export class DataTransformer {
       : '0';
 
     return {
-      Period: this.getRowPeriod(empData.date),
-      Name: empData?.Name || unknownFieldValue,
-      EmpNo: empData?.EmpNo || unknownFieldValue,
-      Shortcode: empData?.Shortcode || unknownFieldValue,
-      BRQ: empData?.BRQ || unknownFieldValue,
-      Date: empData.date,
-      Des: input.Text4,
-      Code: input.Text2,
-      Type: input.Text8,
-      Registration: input.Text10,
-      Dep: input.Text11,
-      Arr: input.Text12,
-      CI: input.TimeText_CI,
-      STD: formattedStd,
-      ATD: input.TimeText_ActualValidFrom,
-      STA: this.formatTime(input.TimeText_ValidToString),
-      ATA: input.TimeText_ActualValidToString,
-      CO: input.TimeText_CO_String,
-      Duty: input.MimerValue1,
-      NightFDP: input.MimerValue2,
-      Block: String(blockHours),
+      // Period: this.getRowPeriod(empData.date),
+      // Name: empData?.Name || unknownFieldValue,
+      // EmpNo: empData?.EmpNo || unknownFieldValue,
+      // Shortcode: empData?.Shortcode || unknownFieldValue,
+      // BRQ: empData?.BRQ || unknownFieldValue,
+      // Date: empData.date,
+
+      start_date: DateTime.now().toISO(),
+      from_date: DateTime.now().toISO(),
+      to_date: DateTime.now().toISO(),
+      scheduled_hours_duration: '20:30',
+
+      roster_designators: input.Text4,
+      code: input.Text2,
+      vehicle_type: input.Text8,
+      registration: input.Text10,
+      dep_string: input.Text11,
+      arr_string: input.Text12,
+      ci: input.TimeText_CI,
+      std: formattedStd,
+      atd: input.TimeText_ActualValidFrom,
+      sta: this.formatTime(input.TimeText_ValidToString),
+      ata: input.TimeText_ActualValidToString,
+      co: input.TimeText_CO_String,
+      duty: input.MimerValue1,
+      night_fdp: input.MimerValue2,
+      block: String(blockHours),
     };
   }
 
   fillEmptyReportValues(report: Roster) {
-    // @ts-ignore
     return Object.entries(report).reduce((acc, [key, value]) => {
       /* Typescript doesn't register this is a key of a roster */
-      let rosterKey = key as keyof Roster;
+      const rosterKey = key as keyof Roster;
 
       if (value) {
         acc[rosterKey] = value;
@@ -235,7 +240,7 @@ export class DataTransformer {
 
     let previousLongRunningDate: string | undefined = 'not set';
 
-    return this.report.reduce((acc: TransformedRoster[], report, index, reports) => {
+    return this.report.reduce((acc: TransformedRosterV2[], report, index, reports) => {
       if (this.isStartOfScan(report)) {
         this.isScanningForEmployee = true;
         this.scanningEmployeeData = {

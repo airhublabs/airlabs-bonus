@@ -6,17 +6,30 @@
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
-      "outputs": ["{options.outputFile}"],
+      "outputs": [
+        "{options.outputFile}"
+      ],
       "options": {
-        "lintFilePatterns": ["libs/data-converter/**/*.ts"]
+        "lintFilePatterns": [
+          "libs/data-converter/**/*.ts"
+        ]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/data-converter"],
+      "outputs": [
+        "coverage/libs/data-converter"
+      ],
       "options": {
         "jestConfig": "libs/data-converter/jest.config.ts",
         "passWithNoTests": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nodemon --ext ts --exec ts-node --ignore '*.test.ts' index.ts",
+        "cwd": "libs/data-converter/src"
       }
     }
   },

@@ -1,1 +1,1 @@
-export * from './lib/calculator-logic';
+export { ScanningService } from './lib/calculator-logic';
