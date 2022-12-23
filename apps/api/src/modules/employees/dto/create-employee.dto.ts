@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger/dist';
 import { Employee, EmployeeType } from '@prisma/client';
-import { OmitCreateDtoFields } from 'apps/api/src/types/helpers.type';
 import { IsEnum, IsString } from 'class-validator';
+import { OmitCreateDtoFields } from '../../../types/helpers.type';
 
 export class CreateEmployeeDto implements OmitCreateDtoFields<Employee> {
   @IsString()
@@ -28,3 +28,4 @@ export class CreateEmployeeDto implements OmitCreateDtoFields<Employee> {
   @ApiPropertyOptional({ enum: EmployeeType })
   type!: EmployeeType;
 }
+

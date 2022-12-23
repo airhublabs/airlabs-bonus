@@ -1,0 +1,34 @@
+{
+  "name": "per-diem-calculator",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/per-diem-calculator/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/per-diem-calculator",
+        "main": "libs/per-diem-calculator/src/index.ts",
+        "tsConfig": "libs/per-diem-calculator/tsconfig.lib.json",
+        "assets": ["libs/per-diem-calculator/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/per-diem-calculator/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/per-diem-calculator"],
+      "options": {
+        "jestConfig": "libs/per-diem-calculator/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

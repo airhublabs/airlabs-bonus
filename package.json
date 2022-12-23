@@ -58,6 +58,7 @@
     "@nrwl/nx-cloud": "latest",
     "@nrwl/react": "15.2.1",
     "@nrwl/web": "15.2.1",
+    "@nrwl/webpack": "14.8.6",
     "@nrwl/workspace": "14.8.6",
     "@styled-jsx/plugin-sass": "^4.0.2",
     "@testing-library/react": "13.4.0",

@@ -1,0 +1,34 @@
+{
+  "name": "calculator-logic",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/calculator-logic/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/calculator-logic",
+        "main": "libs/calculator-logic/src/index.ts",
+        "tsConfig": "libs/calculator-logic/tsconfig.lib.json",
+        "assets": ["libs/calculator-logic/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/calculator-logic/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/calculator-logic"],
+      "options": {
+        "jestConfig": "libs/calculator-logic/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}
