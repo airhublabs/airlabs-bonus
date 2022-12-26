@@ -47,6 +47,11 @@ model Report {
   employee_id Int
 }
 
+model ZohoIntergration {
+  id Int @id @default(autoincrement())
+  refresh_token String
+}
+
 model DangerZone {
   id Int @id @default(autoincrement())
   zone String @unique

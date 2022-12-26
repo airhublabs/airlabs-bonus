@@ -2,14 +2,15 @@ import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { BaseApiExecptionResponse } from '../../types/api-exception.type';
 import { Response } from 'express';
+import { AxiosError } from 'axios';
 
-@Catch()
+@Catch(AxiosError)
 export class AllExecptionFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
   private logger = new Logger(AllExecptionFilter.name);
 
   catch(
-    exception: unknown & { getStatus?: () => number; message?: string },
+    exception: AxiosError & { getStatus?: () => number; message?: string },
     host: ArgumentsHost
   ): void {
     const { httpAdapter } = this.httpAdapterHost;
@@ -28,6 +29,10 @@ export class AllExecptionFilter implements ExceptionFilter {
     };
 
     this.logger.error(exception);
+    console.log({
+      data: exception.response?.data,
+      message: exception.message,
+    });
     response.status(statusCode).json(responseBody);
   }
 }

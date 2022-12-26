@@ -121,6 +121,7 @@ export class ReportsService {
         },
       },
     });
+    const dangerZones = await this.prisma.dangerZone.findMany();
 
     return employees.map((employee) => {
       const { currentMonthReports, previousMonthReports } = aggergateReportMonths({
@@ -129,7 +130,7 @@ export class ReportsService {
       });
 
       const bonus = new BonusCalculatorServiceV2({
-        dangerZones: ['DSS', 'EBL', 'LOS'],
+        dangerZones: dangerZones.map(zone => zone.zone),
         employee: employee,
         hazardPayRate: 25.5,
         previousMonthReports: previousMonthReports,

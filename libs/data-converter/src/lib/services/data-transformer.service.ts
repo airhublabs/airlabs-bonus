@@ -184,7 +184,7 @@ export class DataTransformer {
     };
   }
 
-  fillEmptyReportValues(report: Roster) {
+  private fillEmptyReportValues(report: Roster) {
     return Object.entries(report).reduce((acc, [key, value]) => {
       /* Typescript doesn't register this is a key of a roster */
       const rosterKey = key as keyof Roster;
@@ -214,7 +214,7 @@ export class DataTransformer {
   /**
    * Format time
    */
-  formatTime(time: string) {
+  private formatTime(time: string) {
     if (time === '0') return time;
 
     if (time.length == 3) time = `0${time}`;
@@ -224,7 +224,11 @@ export class DataTransformer {
     return `${time[0]}${time[1] || 0}:${time[2] || 0}${time[3] || 0}`;
   }
 
-  getTimeDifference(params: { departureDate: string; departureTime: string; arrivalTime: string }) {
+  private getTimeDifference(params: {
+    departureDate: string;
+    departureTime: string;
+    arrivalTime: string;
+  }) {
     if (params.arrivalTime === '0') return params.departureTime;
     if (params.departureTime === '0') return params.arrivalTime;
 
