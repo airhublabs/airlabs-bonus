@@ -80,6 +80,8 @@ const EmployeeView = () => {
 
     const bonusDays = bonus.runScan();
 
+
+    console.log(bonus.bonusReportRows)
     setBonusData({
       secuirtyDays: bonusDays.secruityBonusDays,
       amount: bonusDays.secruityBonusDays * 25.5,
