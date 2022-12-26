@@ -3,6 +3,7 @@ import data from '../../apps/api/src/common/helpers/cc_full.json';
 import { Employee, Prisma, PrismaClient } from '@prisma/client';
 import { transformRosterDate } from './time-converter';
 import { EMP_DATA } from '../../apps/api/src/common/helpers/cc_emp';
+import { DateTime } from 'luxon';
 
 const prisma = new PrismaClient();
 
@@ -28,7 +29,8 @@ interface CabinCrewData {
   }[];
 }
 
-const partialCabinCrewSlice = data.Report as unknown as CabinCrewData['Report'];
+let partialCabinCrewSlice = data['Report'] as unknown as CabinCrewData['Report'];
+partialCabinCrewSlice = partialCabinCrewSlice.slice(0, 10000)
 
 const USERS = (params: CabinCrewData['Report'][number]) => {
   const HOMEBASES = {
@@ -56,13 +58,52 @@ const createEmployees = async () => {
   });
 };
 
+const checkMissingDate = () => {};
+
 /**
  * Seed data from JSON file into database
  */
 const seedFromData = async () => {
   await prisma.$transaction(
-    partialCabinCrewSlice.map((report, i) => {
+    partialCabinCrewSlice.map((report, i, reports) => {
       const { fromDate, toDate } = transformRosterDate({ ...report });
+
+      const nextReport = reports?.[i + 1];
+      if (nextReport) {
+        const { fromDate: nextFromDate, toDate: nextToDate } = transformRosterDate(nextReport);
+
+        if (DateTime.fromISO(nextFromDate).day > DateTime.fromISO(fromDate).day + 1) {
+          console.log('Deteced missing date, filling')
+          prisma.report.create({
+            data: {
+              arr_string: report.ArrString,
+              dep_string: report.DepString,
+              code: 'MISSING FILL',
+              project_name_text: report.ProjectNameText,
+              roster_designators: report.RosterDesignators,
+              registration: report.Registration,
+              vehicle_type: report.VehicleType,
+              start_date: DateTime.fromISO(fromDate).plus({day: 1}).toISO(),
+              from_date: DateTime.fromISO(fromDate).plus({day: 1}).toISO(),
+              to_date: DateTime.fromISO(fromDate).plus({day: 1}).toISO(),
+              scheduled_hours_duration: report.ScheduledHoursDuration,
+              employee: {
+                // connect: {emp_no: report.EmpNo}
+                connectOrCreate: {
+                  where: { emp_no: report.EmpNo },
+                  create: {
+                    homebase: 'DEFAULT',
+                    emp_no: report.EmpNo,
+                    human_resource_brq: report.HumanResourceBRQ,
+                    human_resource_full_name: report.HumanResourceFullName,
+                    human_resource_rank: report.HumanResourceRank,
+                  },
+                },
+              },
+            },
+          });
+        }
+      }
 
       console.log('Seeding report number', i);
       return prisma.report.create({

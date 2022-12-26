@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { stringifyISO } from '../../../utils/date.utils';
 
 export const EMPLOYEE_COLUMNS: GridColDef<ReportsApi.RetriveResponseBody>[] = [
+  { field: 'id', headerName: 'ID', width: 90 },
   {
     field: 'from_date',
     headerName: 'From',
@@ -27,7 +28,6 @@ export const EMPLOYEE_COLUMNS: GridColDef<ReportsApi.RetriveResponseBody>[] = [
       return toTime.toLocal().toFormat('h:mm a');
     },
   },
-  { field: 'id', headerName: 'ID', width: 90 },
   {
     field: 'code',
     headerName: 'Code',

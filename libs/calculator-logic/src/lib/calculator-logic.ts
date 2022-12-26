@@ -122,8 +122,17 @@ export class ScanningService {
     let lastScannedDay: number;
 
     return this.params.reports.reduce(
-      (acc, report, i) => {
+      (acc, report, i, reports) => {
         const startDate = DateTime.fromISO(report.start_date);
+
+        /* TODO: Test Code */
+        if (
+          DateTime.fromISO(reports?.[i + 1]?.from_date)?.day &&
+          DateTime.fromISO(reports[i + 1].from_date).day > startDate.day + 1 &&
+          startDate.day !== lastScannedDay
+        ) {
+          console.log('Next is missing ID', report.id);
+        }
 
         if (this.isLeavingHomebase(report)) {
           this.leftHomebaseDate = report.from_date;
@@ -151,6 +160,7 @@ export class ScanningService {
             locationCode: report.arr_string,
             locationString: 'not set',
           });
+
           acc.perDiem += 1;
         }
 
