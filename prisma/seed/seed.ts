@@ -28,7 +28,7 @@ interface CabinCrewData {
   }[];
 }
 
-const partialCabinCrewSlice = data.Report as unknown as CabinCrewData['Report'];
+const partialCabinCrewSlice = data["Report"] as unknown as CabinCrewData['Report'];
 
 const USERS = (params: CabinCrewData['Report'][number]) => {
   const HOMEBASES = {
@@ -59,7 +59,7 @@ const createEmployees = async () => {
 /**
  * Seed data from JSON file into database
  */
-const seedFromData = async () => {
+const createReports = async () => {
   await prisma.$transaction(
     partialCabinCrewSlice.map((report, i) => {
       const { fromDate, toDate } = transformRosterDate({ ...report });
@@ -97,46 +97,10 @@ const seedFromData = async () => {
   );
 };
 
-const seedFromDataNT = async () => {
-  partialCabinCrewSlice.forEach(async (report, i) => {
-    const { fromDate, toDate } = transformRosterDate({ ...report });
-
-    console.log('Seeding report', i);
-    await prisma.report.create({
-      data: {
-        arr_string: report.ArrString,
-        dep_string: report.DepString,
-        code: report.Code,
-        project_name_text: report.ProjectNameText,
-        roster_designators: report.RosterDesignators,
-        registration: report.Registration,
-        vehicle_type: report.VehicleType,
-        start_date: fromDate,
-        from_date: fromDate,
-        to_date: toDate,
-        scheduled_hours_duration: report.ScheduledHoursDuration,
-        employee: {
-          // connect: {emp_no: report.EmpNo}
-          connectOrCreate: {
-            where: { emp_no: report.EmpNo },
-            create: {
-              homebase: 'DEFAULT',
-              emp_no: report.EmpNo,
-              human_resource_brq: report.HumanResourceBRQ,
-              human_resource_full_name: report.HumanResourceFullName,
-              human_resource_rank: report.HumanResourceRank,
-            },
-          },
-        },
-      },
-    });
-  });
-};
-
 const main = async () => {
   try {
     await createEmployees();
-    await seedFromData();
+    await createReports();
   } catch (error) {
     console.log('[TDATA] - Failed to seed transfer data', error);
   }
