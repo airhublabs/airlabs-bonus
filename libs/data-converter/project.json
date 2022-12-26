@@ -25,7 +25,7 @@
         "passWithNoTests": true
       }
     },
-    "dev": {
+    "serve": {
       "executor": "nx:run-commands",
       "options": {
         "command": "nodemon --ext ts --exec ts-node --ignore '*.test.ts' index.ts",

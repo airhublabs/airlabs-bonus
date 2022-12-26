@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { CSV_FIELDS } from '../fields.constant';
+import { CSV_FIELDS, CSV_FIELDSV2 } from '../fields.constant';
 import { DataExporter } from './data-exporter.service';
 import { Roster, TransformedRosterV2 } from './data-transformer';
 import { FileImporterService } from './importer/csv-importer.service';
@@ -118,12 +118,22 @@ export class DataTransformer {
     }).isValid;
   }
 
+  private convertTimeToDecimal(time: string) {
+    const hoursMinutes = time.split(/[.:]/);
+    const hours = parseInt(hoursMinutes[0], 10);
+    const minutes = hoursMinutes[1] ? parseInt(hoursMinutes[1], 10) : 0;
+    return hours + minutes / 60;
+  }
+
   private mapReport(input: Roster, empData: Employee & { date: string }): TransformedRosterV2 {
     const unknownFieldValue = 'Unset';
     const formattedStd = this.formatTime(input.TimeText_ValidFrom);
     const formattedSta = this.formatTime(input.TimeText_ValidToString);
 
-    const blockHours = input.Text10
+    const formattedAta = this.formatTime(input.TimeText_ActualValidToString);
+    const formattedAtd = this.formatTime(input.TimeText_ActualValidFrom);
+
+    const standardBlockHours = input.Text10
       ? this.getTimeDifference({
           departureDate: empData.date,
           departureTime: formattedStd,
@@ -131,19 +141,28 @@ export class DataTransformer {
         })
       : '0';
 
+    const actualBlockHours = input.Text10
+      ? this.getTimeDifference({
+          departureDate: empData.date,
+          departureTime: formattedAtd,
+          arrivalTime: formattedAta,
+        })
+      : '0';
+
+    const actualBlockCalculation = this.convertTimeToDecimal(actualBlockHours);
+    const standardBlockCalculations = this.convertTimeToDecimal(standardBlockHours);
+
     return {
       // Period: this.getRowPeriod(empData.date),
-      // Name: empData?.Name || unknownFieldValue,
-      // EmpNo: empData?.EmpNo || unknownFieldValue,
-      // Shortcode: empData?.Shortcode || unknownFieldValue,
-      // BRQ: empData?.BRQ || unknownFieldValue,
+      Name: empData?.Name || unknownFieldValue,
+      EmpNo: empData?.EmpNo || unknownFieldValue,
+      Shortcode: empData?.Shortcode || unknownFieldValue,
+      BRQ: empData?.BRQ || unknownFieldValue,
       // Date: empData.date,
-
       start_date: DateTime.now().toISO(),
       from_date: DateTime.now().toISO(),
       to_date: DateTime.now().toISO(),
       scheduled_hours_duration: '20:30',
-
       roster_designators: input.Text4,
       code: input.Text2,
       vehicle_type: input.Text8,
@@ -152,13 +171,16 @@ export class DataTransformer {
       arr_string: input.Text12,
       ci: input.TimeText_CI,
       std: formattedStd,
-      atd: input.TimeText_ActualValidFrom,
-      sta: this.formatTime(input.TimeText_ValidToString),
-      ata: input.TimeText_ActualValidToString,
+      atd: formattedAtd,
+      sta: formattedSta,
+      ata: formattedAta,
       co: input.TimeText_CO_String,
       duty: input.MimerValue1,
       night_fdp: input.MimerValue2,
-      block: String(blockHours),
+      sblh: String(standardBlockHours),
+      sblhc: standardBlockCalculations.toFixed(2),
+      blh: String(actualBlockHours),
+      blhc: actualBlockCalculation.toFixed(2),
     };
   }
 
@@ -183,7 +205,7 @@ export class DataTransformer {
 
     this.params.exporter.export({
       data: transformedReports,
-      options: { fields: CSV_FIELDS },
+      options: { fields: CSV_FIELDSV2 },
       outputFileName: 'transformed',
       outputFileLocation: '',
     });
@@ -219,13 +241,10 @@ export class DataTransformer {
         .plus({ day: isNextDay ? 1 : 0 });
       const blockHours = arrDate.diff(depDate, ['hour', 'minute']);
 
-      return blockHours ? `${blockHours.hours} ${Math.round(blockHours.minutes)}` : 0;
+      return blockHours ? `${blockHours.hours}:${Math.round(blockHours.minutes)}` : '0:00';
     } catch (error) {
       console.log({ departTime: params.departureTime, arrivalTime: params.arrivalTime });
     }
-
-    // const depDate = DateTime.fromFormat(validDepartureDate, 'dd/MM/yyyy hh:mm');
-    // const arrDate = depDate.set({ hour: +arrivalHour, minute: +arrivalMinute });
 
     return 'Invalid';
   }

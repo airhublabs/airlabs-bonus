@@ -24,6 +24,10 @@ export interface Roster {
 }
 
 export interface TransformedRosterV2 {
+  Name: string;
+  EmpNo: string;
+  Shortcode: string;
+  BRQ: string;
   start_date: string;
   from_date: string;
   to_date: string;
@@ -42,7 +46,10 @@ export interface TransformedRosterV2 {
   co: string;
   duty: string;
   night_fdp: string;
-  block: string;
+  blh: string;
+  blhc: string;
+  sblh: string;
+  sblhc: string;
 }
 
 export interface TransformedRoster {

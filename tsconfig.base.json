@@ -21,7 +21,8 @@
       "@airlabs-bonus/data-access": ["libs/data-access/src/index.ts"],
       "@airlabs-bonus/data-converter": ["libs/data-converter/src/index.ts"],
       "@airlabs-bonus/types": ["libs/types/src/index.ts"],
-      "@airlabs-bonus/utils": ["libs/utils/src/index.ts"]
+      "@airlabs-bonus/utils": ["libs/utils/src/index.ts"],
+      "@airlabs-bonus/zoho-wrapper": ["libs/zoho-wrapper/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
