@@ -1,4 +1,4 @@
-import fs from 'fs';
+import * as fs from 'fs';
 import { parseAsync } from 'json2csv';
 import type { Readable, TransformOptions } from 'stream';
 

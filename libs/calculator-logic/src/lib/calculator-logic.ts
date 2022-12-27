@@ -1,9 +1,11 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { EmployeesApi, ReportsApi } from '@airlabs-bonus/types';
+import { ChildProcess } from 'child_process';
 import { DateTime } from 'luxon';
 
 interface ScanningServiceParams {
   reports: ReportsApi.ListResponseBody;
+  previousReports: ReportsApi.ListResponseBody;
   employee: EmployeesApi.RetriveResponseBody;
   dangerZones: string[];
 }
@@ -12,6 +14,7 @@ interface BonusReportRow {
   locationCode: string;
   locationString: string;
   type: 'per_diem' | 'security';
+  date: string;
 }
 
 export class ScanningService {
@@ -34,11 +37,22 @@ export class ScanningService {
     );
   }
 
+  /* Check if leaving homebase */
+  /* Check if arrivng homebase */
   private isNotInHomebase(report: ReportsApi.RetriveResponseBody) {
-    return (
+    const isLeavingHomebase =
+      report.dep_string === this.params.employee.homebase &&
+      report.arr_string !== this.params.employee.homebase;
+
+    const neitherInHomebase =
       report.arr_string !== this.params.employee.homebase ||
-      report.dep_string !== this.params.employee.homebase
-    );
+      report.dep_string !== this.params.employee.homebase;
+
+    const isArrivingAtHomebase =
+      report.dep_string !== this.params.employee.homebase &&
+      report.arr_string === this.params.employee.homebase;
+
+    return isLeavingHomebase || neitherInHomebase || isArrivingAtHomebase;
   }
 
   private isArrivingAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
@@ -70,16 +84,19 @@ export class ScanningService {
     );
   }
 
-  private getLeftHomebaseDateDifference(report: ReportsApi.RetriveResponseBody) {
-    const leftHomebaseDate = DateTime.fromISO(this.leftHomebaseDate as string);
-    const departureDate = DateTime.fromISO(report.from_date);
+  private getLeftHomebaseDateDifference(params: {
+    projectStartDate: string;
+    projectEndDate: string;
+  }) {
+    const leftHomebaseDate = DateTime.fromISO(params.projectStartDate as string);
+    const departureDate = DateTime.fromISO(params.projectEndDate);
 
     const secruityBonusDays =
       departureDate.startOf('day').diff(leftHomebaseDate.startOf('day'), ['days']).days + 1;
 
     console.log('Calculating difference', {
-      leftHomebaseDate: this.leftHomebaseDate,
-      departureDate: report.start_date,
+      leftHomebaseDate: params.projectEndDate,
+      departureDate: params.projectStartDate,
     });
 
     return secruityBonusDays;
@@ -114,54 +131,129 @@ export class ScanningService {
       .map((report) => report.id);
   }
 
+  checkForPreviousDangerProject() {
+    let leftHomebaseDate: string | undefined = undefined;
+
+    return this.params.previousReports.reduce((acc, report) => {
+      if (this.isLeavingHomebase(report)) {
+        leftHomebaseDate = report.from_date;
+      }
+
+      if (leftHomebaseDate && this.isDangerousProject(report)) {
+        acc = true;
+      }
+
+      if (this.isArrivingAtHomebase(report)) {
+        acc = false;
+      }
+
+      return acc;
+    }, false);
+  }
+
   /**
    * Runs the scan and outputs all per diems, secruity bonuses, etc.
    */
   runScan() {
     // let checkingPerDiemDay = 0;
     let lastScannedDay: number;
+    const previousDangerousProject = this.checkForPreviousDangerProject();
 
     return this.params.reports.reduce(
-      (acc, report, i) => {
+      (acc, report, i, reports) => {
         const startDate = DateTime.fromISO(report.start_date);
+
+        /* TODO: Test Code */
+        if (
+          DateTime.fromISO(reports?.[i + 1]?.from_date)?.day &&
+          DateTime.fromISO(reports[i + 1].from_date).day > startDate.day + 1 &&
+          startDate.day !== lastScannedDay
+        ) {
+          console.log('Next is missing ID', report.id);
+        }
+
+        if (this.isArrivingAtHomebase(report)) {
+          console.log('Arrived at homebase', { date: report.start_date });
+        }
 
         if (this.isLeavingHomebase(report)) {
           this.leftHomebaseDate = report.from_date;
+          console.log('Left homebase', { date: report.from_date });
         }
 
         if (this.checkAssignedDangerousProject(report)) {
           this.isAssignedDangerousProject = true;
+          console.log('Assigned dangerous project', { date: report.from_date });
         }
 
-        if (
-          this.isAssignedDangerousProject &&
-          this.leftHomebaseDate &&
-          lastScannedDay !== startDate.day
-        ) {
+        /*         if (
+        (previousDangerousProject && lastScannedDay !== startDate.day) ||
+        (this.isAssignedDangerousProject && this.leftHomebaseDate)
+      ) {
+        if (lastScannedDay !== startDate.day) {
           this.bonusReportRows.push({
             locationCode: report.arr_string,
             locationString: 'not set',
             type: 'security',
           });
+
+          acc.secruityBonusDays += 1;
         }
+        this.dangerousProjectIds.push(report.id);
+      } */
 
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
-          this.bonusReportRows.push({
-            type: 'per_diem',
-            locationCode: report.arr_string,
-            locationString: 'not set',
-          });
-          acc.perDiem += 1;
+          const sameDayFlights = reports.filter(
+            (report) => DateTime.fromISO(report.from_date).day === startDate.day
+          );
+          const lastFlightOfDay = sameDayFlights[sameDayFlights.length - 1];
+          const flightHasPositioning = sameDayFlights.find((_report) => _report.code === 'POS');
+          const hasLeftHomebase = sameDayFlights.find(
+            (_report) => _report.arr_string === this.params.employee.homebase
+          );
+
+          const lastFlightIsHomebase = lastFlightOfDay.arr_string !== this.params.employee.homebase;
+
+          if (
+            hasLeftHomebase ||
+            lastFlightIsHomebase ||
+            flightHasPositioning
+            // TODO: Check if it's a minute over
+          ) {
+            this.bonusReportRows.push({
+              type: 'per_diem',
+              date: report.start_date,
+              locationCode: report.arr_string,
+              locationString: 'not set',
+            });
+
+            this.dangerousProjectIds.push(report.id);
+            acc.perDiem += 1;
+          }
         }
 
         /* May not even be needed */
-        if (this.isArrvingAtHomebaseWithBonus(report, i) && this.leftHomebaseDate) {
+        if (
+          (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
+          ((this.leftHomebaseDate && this.isAssignedDangerousProject) || previousDangerousProject)
+          // (this.isArrivingAtHomebase(report) &&
+          //   this.isAssignedDangerousProject &&
+          //   this.leftHomebaseDate) ||
+          // (this.isArrivingAtHomebase(report) && previousDangerousProject) ||
+          // (i === reports.length - 1 &&
+          //   (this.isAssignedDangerousProject || previousDangerousProject))
+        ) {
+          const dangerousStart = this.leftHomebaseDate || startDate.startOf('month').toISO();
+
           if (this.isAssignedDangerousProject) {
-            acc.secruityBonusDays = this.getLeftHomebaseDateDifference(report);
+            acc.secruityBonusDays = this.getLeftHomebaseDateDifference({
+              projectStartDate: dangerousStart,
+              projectEndDate: report.to_date,
+            });
           }
 
           const dangerousIds = this.getDangerousIds({
-            dangerousStart: this.leftHomebaseDate,
+            dangerousStart: dangerousStart,
             endDate: report.start_date,
           });
           this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];

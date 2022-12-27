@@ -3,6 +3,7 @@ import data from '../../apps/api/src/common/helpers/cc_full.json';
 import { Employee, Prisma, PrismaClient } from '@prisma/client';
 import { transformRosterDate } from './time-converter';
 import { EMP_DATA } from '../../apps/api/src/common/helpers/cc_emp';
+import { DateTime } from 'luxon';
 
 const prisma = new PrismaClient();
 
@@ -28,7 +29,8 @@ interface CabinCrewData {
   }[];
 }
 
-const partialCabinCrewSlice = data["Report"] as unknown as CabinCrewData['Report'];
+let partialCabinCrewSlice = data['Report'] as unknown as CabinCrewData['Report'];
+// partialCabinCrewSlice = partialCabinCrewSlice.slice(0, 10000);
 
 const USERS = (params: CabinCrewData['Report'][number]) => {
   const HOMEBASES = {
@@ -56,45 +58,205 @@ const createEmployees = async () => {
   });
 };
 
+const sortRawReports = (data: CabinCrewData['Report']) => {
+  return data.sort((a, z) => {
+    const aDate = DateTime.fromFormat(a.StartDate, 'dd-MMM-yyyy');
+    const zDate = DateTime.fromFormat(z.StartDate, 'dd-MMM-yyyy');
+
+    if (a.EmpNo < z.EmpNo) return -1;
+    if (a.EmpNo > z.EmpNo) return 1;
+
+    if (aDate.toJSDate() < zDate.toJSDate()) return -1;
+    if (aDate.toJSDate() > zDate.toJSDate()) return 1;
+
+    return 0;
+  });
+};
+
 /**
  * Seed data from JSON file into database
  */
 const createReports = async () => {
+  const sortedReports = sortRawReports(partialCabinCrewSlice);
+
   await prisma.$transaction(
-    partialCabinCrewSlice.map((report, i) => {
+    sortedReports.reduce((acc, report, i, reports) => {
       const { fromDate, toDate } = transformRosterDate({ ...report });
 
-      console.log('Seeding report number', i);
-      return prisma.report.create({
-        data: {
-          arr_string: report.ArrString,
-          dep_string: report.DepString,
-          code: report.Code,
-          project_name_text: report.ProjectNameText,
-          roster_designators: report.RosterDesignators,
-          registration: report.Registration,
-          vehicle_type: report.VehicleType,
-          start_date: fromDate,
-          from_date: fromDate,
-          to_date: toDate,
-          scheduled_hours_duration: report.ScheduledHoursDuration,
-          employee: {
-            // connect: {emp_no: report.EmpNo}
-            connectOrCreate: {
-              where: { emp_no: report.EmpNo },
-              create: {
-                homebase: 'DEFAULT',
-                emp_no: report.EmpNo,
-                human_resource_brq: report.HumanResourceBRQ,
-                human_resource_full_name: report.HumanResourceFullName,
-                human_resource_rank: report.HumanResourceRank,
+      console.log('Seeding report count: ', i);
+      acc.push(
+        prisma.report.create({
+          data: {
+            arr_string: report.ArrString,
+            dep_string: report.DepString,
+            code: report.Code,
+            project_name_text: report.ProjectNameText,
+            roster_designators: report.RosterDesignators,
+            registration: report.Registration,
+            vehicle_type: report.VehicleType,
+            start_date: fromDate,
+            from_date: fromDate,
+            to_date: toDate,
+            scheduled_hours_duration: report.ScheduledHoursDuration,
+            employee: {
+              // connect: {emp_no: report.EmpNo}
+              connectOrCreate: {
+                where: { emp_no: report.EmpNo },
+                create: {
+                  homebase: 'DEFAULT',
+                  emp_no: report.EmpNo,
+                  human_resource_brq: report.HumanResourceBRQ,
+                  human_resource_full_name: report.HumanResourceFullName,
+                  human_resource_rank: report.HumanResourceRank,
+                },
               },
             },
           },
-        },
-      });
-    })
+        })
+      );
+
+      const nextReport = reports?.[i + 1];
+      const lastReport = reports?.[i - 1];
+
+      /**
+       * Cases that are breaking
+       * - Invalid format of ARR & DEP string for missing days
+       */
+
+      if (nextReport) {
+        const { fromDate: nextFromDate } = transformRosterDate(nextReport);
+
+        if (DateTime.fromISO(nextFromDate).day > DateTime.fromISO(fromDate).day + 1) {
+          const lNextFromDate = DateTime.fromISO(nextFromDate);
+          const lFromDate = DateTime.fromISO(fromDate);
+
+          const differenceInDays = lNextFromDate.day - lFromDate.day - 1;
+
+          Array.from({ length: differenceInDays }).map((_, i) => {
+            acc.push(
+              prisma.report.create({
+                data: {
+                  arr_string: nextReport.DepString,
+                  dep_string: lastReport.ArrString,
+                  code: 'MISSING FILL ' + DateTime.fromISO(fromDate).toFormat('dd-MM-yy mm:hh'),
+                  project_name_text: report.ProjectNameText,
+                  roster_designators: report.RosterDesignators,
+                  registration: report.Registration,
+                  vehicle_type: report.VehicleType,
+                  start_date: DateTime.fromISO(fromDate)
+                    .startOf('day')
+                    .plus({ day: i + 1 })
+                    .toISO(),
+                  from_date: DateTime.fromISO(fromDate)
+                    .startOf('day')
+                    .plus({ day: i + 1 })
+                    .toISO(),
+                  to_date: DateTime.fromISO(fromDate)
+                    .startOf('day')
+                    .plus({ day: i + 1 })
+                    .toISO(),
+                  scheduled_hours_duration: report.ScheduledHoursDuration,
+                  employee: {
+                    // connect: {emp_no: report.EmpNo}
+                    connectOrCreate: {
+                      where: { emp_no: report.EmpNo },
+                      create: {
+                        homebase: 'DEFAULT',
+                        emp_no: report.EmpNo,
+                        human_resource_brq: report.HumanResourceBRQ,
+                        human_resource_full_name: report.HumanResourceFullName,
+                        human_resource_rank: report.HumanResourceRank,
+                      },
+                    },
+                  },
+                },
+              })
+            );
+          });
+
+          console.log('Detected missing date, filling date');
+        }
+      }
+
+      return acc;
+    }, [] as any[])
   );
+};
+
+const seedFromDataNT = async () => {
+  const sortedReports = sortRawReports(partialCabinCrewSlice);
+
+  sortedReports.map(async (report, i, reports) => {
+    const { fromDate, toDate } = transformRosterDate({ ...report });
+
+    const nextReport = reports?.[i + 1];
+    if (nextReport) {
+      const { fromDate: nextFromDate, toDate: nextToDate } = transformRosterDate(nextReport);
+
+      if (DateTime.fromISO(nextFromDate).day > DateTime.fromISO(fromDate).day + 1) {
+        console.log('Deteced missing date, filling');
+        await prisma.report.create({
+          data: {
+            arr_string: report.ArrString,
+            dep_string: report.DepString,
+            code: 'MISSING FILL',
+            project_name_text: report.ProjectNameText,
+            roster_designators: report.RosterDesignators,
+            registration: report.Registration,
+            vehicle_type: report.VehicleType,
+            start_date: DateTime.fromISO(fromDate).plus({ day: 1 }).toISO(),
+            from_date: DateTime.fromISO(fromDate).plus({ day: 1 }).toISO(),
+            to_date: DateTime.fromISO(fromDate).plus({ day: 1 }).toISO(),
+            scheduled_hours_duration: report.ScheduledHoursDuration,
+            employee: {
+              // connect: {emp_no: report.EmpNo}
+              connectOrCreate: {
+                where: { emp_no: report.EmpNo },
+                create: {
+                  homebase: 'DEFAULT',
+                  emp_no: report.EmpNo,
+                  human_resource_brq: report.HumanResourceBRQ,
+                  human_resource_full_name: report.HumanResourceFullName,
+                  human_resource_rank: report.HumanResourceRank,
+                },
+              },
+            },
+          },
+        });
+        return;
+      }
+    }
+
+    console.log('Seeding report number', i);
+    await prisma.report.create({
+      data: {
+        arr_string: report.ArrString,
+        dep_string: report.DepString,
+        code: report.Code,
+        project_name_text: report.ProjectNameText,
+        roster_designators: report.RosterDesignators,
+        registration: report.Registration,
+        vehicle_type: report.VehicleType,
+        start_date: fromDate,
+        from_date: fromDate,
+        to_date: toDate,
+        scheduled_hours_duration: report.ScheduledHoursDuration,
+        employee: {
+          connect: { emp_no: report.EmpNo },
+          connectOrCreate: {
+            where: { emp_no: report.EmpNo },
+            create: {
+              homebase: 'DEFAULT',
+              emp_no: report.EmpNo,
+              human_resource_brq: report.HumanResourceBRQ,
+              human_resource_full_name: report.HumanResourceFullName,
+              human_resource_rank: report.HumanResourceRank,
+            },
+          },
+        },
+      },
+    });
+  });
 };
 
 const main = async () => {

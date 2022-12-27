@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { BonusCalculatorServiceV2 } from '@airlabs-bonus/bonus-calculator';
+import { ScanningService } from '@airlabs-bonus/calculator-logic';
 import { Button } from '@mui/material';
 import { Stack } from '@mui/system';
-import { DataGrid, GridEventListener, GridToolbarExport } from '@mui/x-data-grid';
+import { DataGrid, GridEventListener, GridToolbar, GridToolbarExport } from '@mui/x-data-grid';
 import { useRouter } from 'next/router';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
@@ -12,13 +12,11 @@ import { aggergateReportMonths, useListReports } from '../../lib/api/reports/rep
 import { useListDangerZones } from '../../lib/api/zones/zones.query';
 import DataCard from '../../lib/components/global/DataCard';
 import PageHeader from '../../lib/components/header/PageHeader';
-import { EMPLOYEE_COLUMNS } from '../../lib/views/employees/constants/employee-columns.constant';
 import EmployeeViewHeader from '../../lib/views/employees/EmployeeViewHeader';
+import MonthSelect, { MonthSelectProps } from '../../lib/views/employees/MonthSelect';
+import { EMPLOYEE_COLUMNS } from '../../lib/views/employees/constants/employee-columns.constant';
 import { transformReports } from '../../lib/views/employees/logic/reports-transform.service';
 import ReportDialog from '../../lib/views/employees/modals/ReportDialog';
-import MonthSelect, { MonthSelectProps } from '../../lib/views/employees/MonthSelect';
-import { ScanningService } from '@airlabs-bonus/calculator-logic';
-import { number } from 'zod';
 
 const EmployeeView = () => {
   const { employeeId } = useRouter().query;
@@ -62,26 +60,16 @@ const EmployeeView = () => {
       reports: reportsQuery.data,
     });
 
-    // const bonus = new BonusCalculatorServiceV2({
-    //   reports: currentMonthReports,
-    //   employee: employeeQuery.data,
-    //   previousMonthReports: previousMonthReports,
-    //   hazardPayRate: 25.5,
-    //   dangerZones: dangerZonesQuery?.data?.map((data) => data.zone),
-    // });
-
     const bonus = new ScanningService({
-      dangerZones: ['EBL', 'DSS', 'SNGL3'],
+      dangerZones: ['EBL', 'DSS', 'SNGL3', 'LIS'],
+      previousReports: previousMonthReports,
       employee: employeeQuery.data,
       reports: currentMonthReports,
     });
 
-    // const bonusDays = bonus.getEligbleBonusHours();
-
     const bonusDays = bonus.runScan();
 
-
-    console.log(bonus.bonusReportRows)
+    console.log(bonus.bonusReportRows);
     setBonusData({
       secuirtyDays: bonusDays.secruityBonusDays,
       amount: bonusDays.secruityBonusDays * 25.5,
@@ -201,7 +189,7 @@ const EmployeeView = () => {
 
 const ExportToolbar = () => {
   return (
-    <GridToolbarExport
+    <GridToolbar
       excelOptions={{
         columnsStyles: {},
       }}

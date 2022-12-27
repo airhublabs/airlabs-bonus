@@ -7,12 +7,20 @@ import { PrismaValidationFilter } from '../common/filters/prisma-validation.filt
 import { DangerZonesModule } from '../modules/danger-zones/danger-zones.module';
 import { EmployeesModule } from '../modules/employees/employees.module';
 import { ReportsModule } from '../modules/reports/reports.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AutomationModule } from '../modules/automation/automation.module';
 
 @Module({
-  imports: [EmployeesModule, ReportsModule, DangerZonesModule],
+  imports: [
+    EmployeesModule,
+    ReportsModule,
+    DangerZonesModule,
+    ScheduleModule.forRoot(),
+    AutomationModule
+  ],
   controllers: [AppController],
   providers: [
     AppService,

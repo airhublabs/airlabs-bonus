@@ -122,7 +122,7 @@ export class BonusCalculatorServiceV2 {
       /* Dangerous project detected, signifies start of project */
       if (this.isDangerousProject(report) && !isAssignedDangerousProject) {
         isAssignedDangerousProject = true;
-        console.log('Assigned dangerous', { id: report.id, date: report.start_date });
+        // console.log('Assigned dangerous', { id: report.id, date: report.start_date });
       }
 
       /* Has left homebase with assigned dangerous project. */
@@ -132,7 +132,7 @@ export class BonusCalculatorServiceV2 {
         hasLeftHomebase &&
         !dangerousProjectStartDate
       ) {
-        console.log('Dangeorus start', { id: report.id, date: report.start_date });
+        // console.log('Dangeorus start', { id: report.id, date: report.start_date });
         dangerousProjectStartDate = leftHomebaseDate;
       }
 
@@ -140,7 +140,7 @@ export class BonusCalculatorServiceV2 {
         hasLeftHomebase = false;
         leftHomebaseDate = undefined;
         isAssignedDangerousProject = false;
-        console.log('Arrived home', { id: report.id, date: report.start_date });
+        // console.log('Arrived home', { id: report.id, date: report.start_date });
       }
 
       /* Is arriving at homebase with previous dangergours project */
@@ -164,11 +164,11 @@ export class BonusCalculatorServiceV2 {
           endDate: report.start_date,
         });
 
-        console.log('End of dangerous project with previous', {
-          startDate: firstOfMonthDate.toFormat('MM-dd'),
-          endDate: lStartDate.toFormat('MM-dd'),
-          bonusPay: bonusPayDays,
-        });
+        // console.log('End of dangerous project with previous', {
+        //   startDate: firstOfMonthDate.toFormat('MM-dd'),
+        //   endDate: lStartDate.toFormat('MM-dd'),
+        //   bonusPay: bonusPayDays,
+        // });
 
         this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
 
@@ -196,11 +196,11 @@ export class BonusCalculatorServiceV2 {
           .diff(lDangerousProjectStartDate.startOf('day'), ['day']);
         const bonusPayDays = bonusPay.days + 1;
 
-        console.log('End of dangerous project', {
-          startDate: lDangerousProjectStartDate.startOf('day').toISO(),
-          endDate: lStartDate.toISO(),
-          bonusPay: bonusPayDays,
-        });
+        // console.log('End of dangerous project', {
+        //   startDate: lDangerousProjectStartDate.startOf('day').toISO(),
+        //   endDate: lStartDate.toISO(),
+        //   bonusPay: bonusPayDays,
+        // });
 
         const dangerousIds = this.getDangerousIds({
           dangerousStart: dangerousProjectStartDate,

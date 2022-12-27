@@ -12,6 +12,7 @@ import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { ReportCreatorService } from './services/report-creator.service';
 import { ReportUploadService } from './services/report-upload.service';
+import { ScanningService } from '@airlabs-bonus/calculator-logic';
 
 interface ListParams {
   filter?: Prisma.ReportWhereInput;
@@ -121,6 +122,7 @@ export class ReportsService {
         },
       },
     });
+    const dangerZones = await this.prisma.dangerZone.findMany();
 
     return employees.map((employee) => {
       const { currentMonthReports, previousMonthReports } = aggergateReportMonths({
@@ -128,17 +130,21 @@ export class ReportsService {
         currentMonth: month,
       });
 
-      const bonus = new BonusCalculatorServiceV2({
-        dangerZones: ['DSS', 'EBL', 'LOS'],
+      const bonus = new ScanningService({
+        dangerZones: ['LIS', 'EBL', 'DSS'],
         employee: employee,
-        hazardPayRate: 25.5,
-        previousMonthReports: previousMonthReports,
+        previousReports: previousMonthReports,
         reports: currentMonthReports,
       });
 
-      const days = bonus.getEligbleBonusHours();
+      const days = bonus.runScan();
 
-      return { emp_no: employee.emp_no, bonus: days, id: employee.id  };
+      return {
+        emp_no: employee.emp_no,
+        bonus: days.secruityBonusDays,
+        perDiems: days.perDiem,
+        id: employee.id,
+      };
     });
     return {};
   }

@@ -12,10 +12,13 @@ import MonthSelect, { MonthSelectProps } from '../lib/views/employees/MonthSelec
 const BONUS_REPORTS_COLUMN: GridColDef<ReportsApi.RunBonusReportBody[number]>[] = [
   {
     field: 'emp_no',
-    renderCell: (params) => <a href={`/employees/${params.row.id}`}>{params.value}</a>
+    renderCell: (params) => <a href={`/employees/${params.row.id}`}>{params.value}</a>,
   },
   {
     field: 'bonus',
+  },
+  {
+    field: 'perDiems',
   },
   {
     field: 'id',
@@ -25,7 +28,11 @@ const BONUS_REPORTS_COLUMN: GridColDef<ReportsApi.RunBonusReportBody[number]>[] 
 const useRunBonusReport = ({ month }: { month: number }) => {
   const fetchBonusReport = async () => (await api.reports.runReport({ month })).data;
 
-  const bonusReportQuery = useQuery({ queryFn: fetchBonusReport, queryKey: ['bonus', month] });
+  const bonusReportQuery = useQuery({
+    queryFn: fetchBonusReport,
+    queryKey: ['bonus', month],
+    refetchOnWindowFocus: false,
+  });
 
   return bonusReportQuery;
 };
@@ -66,7 +73,6 @@ const Report = () => {
           placeholder="Search by Employee Number..."
           label="Employe number"
           variant="outlined"
-
           onChange={(e) => setFilterEmpNp(e.target.value)}
         />
         <div className="data-grid-wrap">
