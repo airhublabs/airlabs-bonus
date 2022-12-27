@@ -1,4 +1,4 @@
-import csvToJson from 'csvtojson/v2';
+import * as csvToJson from 'csvtojson/v2';
 
 export abstract class FileImporterService {
   abstract importFile(): any;
@@ -14,7 +14,9 @@ export class CSVImporterService extends FileImporterService {
   }
 
   async importFile(): Promise<any> {
-    const json = await csvToJson().fromFile(this.params.csvFilePath);
+    /* TODO: Fix CSV Importer */
+    // @ts-ignore
+    const json = await csvToJson.fromFile(this.params.csvFilePath);
     return json;
   }
 }

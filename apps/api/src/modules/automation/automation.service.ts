@@ -1,8 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { CreateAutomationDto } from './dto/create-automation.dto';
-import { UpdateAutomationDto } from './dto/update-automation.dto';
-import { Cron } from '@nestjs/schedule';
 import { ZohoApi } from '@airlabs-bonus/zoho-wrapper';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class AutomationService {

@@ -9,4 +9,7 @@ export class BatchGetReportDto {
 
   @ApiProperty()
   bonus!: number;
+
+  @ApiProperty()
+  perDiems!: number;
 }

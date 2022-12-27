@@ -61,7 +61,8 @@ const EmployeeView = () => {
     });
 
     const bonus = new ScanningService({
-      dangerZones: ['EBL', 'DSS', 'SNGL3'],
+      dangerZones: ['EBL', 'DSS', 'SNGL3', 'LIS'],
+      previousReports: previousMonthReports,
       employee: employeeQuery.data,
       reports: currentMonthReports,
     });
