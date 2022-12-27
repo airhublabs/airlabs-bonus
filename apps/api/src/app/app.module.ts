@@ -14,7 +14,13 @@ import { AppService } from './app.service';
 import { AutomationModule } from '../modules/automation/automation.module';
 
 @Module({
-  imports: [EmployeesModule, ReportsModule, DangerZonesModule, ScheduleModule.forRoot(), AutomationModule],
+  imports: [
+    EmployeesModule,
+    ReportsModule,
+    DangerZonesModule,
+    ScheduleModule.forRoot(),
+    AutomationModule
+  ],
   controllers: [AppController],
   providers: [
     AppService,

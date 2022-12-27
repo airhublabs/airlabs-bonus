@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { OAuth } from './auth/zoho-oauth.api';
-import { PerDiems } from './auth/per-diems.api';
+import { OAuth } from '../auth/zoho-oauth.api';
+import { PerDiems } from './per-diems.api';
 
 export const filterEmptyKeys = (object: { [key: string]: any }) => {
   return Object.entries(object).reduce((acc: any, [key, value]) => {
@@ -122,6 +122,7 @@ export class ZohoApi {
   public OAuth: OAuth;
   public PerDiems: PerDiems;
 
+  // accountOwnerName, appLinkName
   constructor(private readonly params: RequestParams) {
     const request = new ZohoRequest(params);
 
