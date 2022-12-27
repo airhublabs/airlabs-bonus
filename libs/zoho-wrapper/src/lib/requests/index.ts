@@ -119,7 +119,7 @@ export class ZohoRequest {
 }
 
 export class ZohoApi {
-  public OAuth: OAuth;
+  // public OAuth: OAuth;
   public PerDiems: PerDiems;
 
   // accountOwnerName, appLinkName
@@ -127,6 +127,6 @@ export class ZohoApi {
     const request = new ZohoRequest(params);
 
     this.PerDiems = new PerDiems(request);
-    this.OAuth = new OAuth(request);
+    // this.OAuth = new OAuth(request);
   }
 }
