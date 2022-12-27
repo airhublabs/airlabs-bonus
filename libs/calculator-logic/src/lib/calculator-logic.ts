@@ -161,7 +161,7 @@ export class ScanningService {
           DateTime.fromISO(reports[i + 1].from_date).day > startDate.day + 1 &&
           startDate.day !== lastScannedDay
         ) {
-          // console.log('Next is missing ID', report.id);
+          console.log('Next is missing ID', report.id);
         }
 
         if (this.isLeavingHomebase(report) && !this.leftHomebaseDate) {
@@ -173,22 +173,6 @@ export class ScanningService {
           this.isAssignedDangerousProject = true;
           // console.log('Assigned dangerous project', { date: report.from_date });
         }
-
-        /*         if (
-        (previousDangerousProject && lastScannedDay !== startDate.day) ||
-        (this.isAssignedDangerousProject && this.leftHomebaseDate)
-      ) {
-        if (lastScannedDay !== startDate.day) {
-          this.bonusReportRows.push({
-            locationCode: report.arr_string,
-            locationString: 'not set',
-            type: 'security',
-          });
-
-          acc.secruityBonusDays += 1;
-        }
-        this.dangerousProjectIds.push(report.id);
-      } */
 
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
           const sameDayFlights = reports.filter(
@@ -215,17 +199,14 @@ export class ScanningService {
               locationString: 'not set',
             });
 
-            // this.dangerousProjectIds.push(report.id);
             acc.perDiem += 1;
           }
         }
 
-        /* May not even be needed */
         if (
           (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
           this.leftHomebaseDate &&
           this.isAssignedDangerousProject
-          // ((this.leftHomebaseDate && this.isAssignedDangerousProject) || previousDangerousProject)
         ) {
           const dangerousStart = this.leftHomebaseDate || startDate.startOf('month').toISO();
           const dangerousEnd =
@@ -281,7 +262,7 @@ export class ScanningService {
           this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
-          previousDangerousProject = false
+          previousDangerousProject = false;
         }
 
         if (startDate.day !== lastScannedDay) {
