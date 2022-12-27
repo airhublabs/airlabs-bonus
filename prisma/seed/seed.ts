@@ -76,7 +76,7 @@ const sortRawReports = (data: CabinCrewData['Report']) => {
 /**
  * Seed data from JSON file into database
  */
-const seedFromData = async () => {
+const createReports = async () => {
   const sortedReports = sortRawReports(partialCabinCrewSlice);
 
   await prisma.$transaction(
@@ -262,7 +262,7 @@ const seedFromDataNT = async () => {
 const main = async () => {
   try {
     await createEmployees();
-    await seedFromData();
+    await createReports();
   } catch (error) {
     console.log('[TDATA] - Failed to seed transfer data', error);
   }
