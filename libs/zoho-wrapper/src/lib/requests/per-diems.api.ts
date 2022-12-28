@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ZohoApi, ZohoRequest } from '.';
+import { ZohoRequest } from './index';
 
 interface PerDiemsCreateData {
   EmpNo: string;
