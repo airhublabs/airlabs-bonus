@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { OAuth } from '../auth/zoho-oauth.api';
 import { PerDiems } from './per-diems.api';
 import { RequestParams } from '../../zoho';
@@ -29,29 +29,26 @@ interface RequestData {
 Zoho Request Wrapper
 
 Scopes:
-- ZohoCreator.report.ALL / ZohoCreator.report.READ
-- ZohoCreator.FORM.ALL
-- ZohoCreator.report.UPDATE
-- ZohoCreator.report.ALL,ZohoCreator.form.CREATE,ZohoCreator.form.READ,,ZohoCreator.report.CREATE
+- ZohoCreator.report.READ,ZohoCreator.report.create,ZohoCreator.report.UPDATE,ZohoCreator.form.ALL,ZohoCreator.form.CREATE,ZohoCreator.form.READ
 */
 export class ZohoRequest {
   private DEFAULT_REQUEST_OPTIONS: RequestOptions = {
     credentials: true,
   };
   public params: RequestParams;
-  public accessToken!: string;
+  public BASE_URL!: string;
+  public OAuth: OAuth;
 
-  constructor(params?: Partial<RequestParams>) {
-    // todo: Remove
-    this.accessToken = '1000.aa6fab0c1f99352ff121d393b203ee20.180436b029aeab738f40d24b84030c7d';
+  constructor(params: RequestParams) {
     this.params = {
       accountsHost: DEFAULT_ACCOUNT_HOST,
       apiHost: DEFAULT_API_HOST,
       version: DEFAULT_VERSION,
-      accountOwnerName: 'adam_webrevived',
-      appLinkName: 'airhub',
       ...params,
     };
+
+    this.BASE_URL = `${this.params.apiHost}/api/${this.params.version}/${this.params.accountOwnerName}/${this.params.appLinkName}`;
+    this.OAuth = new OAuth(this);
   }
 
   async request<T>(
@@ -61,22 +58,33 @@ export class ZohoRequest {
     options?: Partial<RequestOptions>
   ) {
     options = { ...this.DEFAULT_REQUEST_OPTIONS, ...options };
-    const BASE_URL = `${this.params.apiHost}/${this.params.version}/${this.params.accountOwnerName}/${this.params.appLinkName}${path}`;
+    const URL = `${this.BASE_URL}/${path}`;
+    const accessToken = this.OAuth.getAccessToken();
 
-    const response = axios.request<T>({
-      url: BASE_URL,
-      method: type,
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-      },
-      withCredentials: true,
-      xsrfCookieName: 'csrftoken',
-      xsrfHeaderName: 'X-CSRFTOKEN',
-      data: data.body,
-      params: data.params,
-    });
+    try {
+      const response = await axios.request<T>({
+        url: URL,
+        method: type,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        withCredentials: true,
+        xsrfCookieName: 'csrftoken',
+        xsrfHeaderName: 'X-CSRFTOKEN',
+        data: data.body,
+        params: data.params,
+      });
 
-    return response;
+      return response;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.data?.code === 1030) {
+          console.log('Auth error', error.response.data);
+        }
+      }
+
+      return error;
+    }
   }
 
   /**

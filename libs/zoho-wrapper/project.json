@@ -18,6 +18,13 @@
         "jestConfig": "libs/zoho-wrapper/jest.config.ts",
         "passWithNoTests": true
       }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nodemon -r dotenv/config --ext ts --exec ts-node --ignore '*.test.ts' index.ts",
+        "cwd": "libs/zoho-wrapper/src"
+      }
     }
   },
   "tags": []

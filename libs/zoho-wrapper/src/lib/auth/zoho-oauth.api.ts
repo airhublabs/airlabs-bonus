@@ -1,18 +1,8 @@
 import axios, { AxiosResponse } from 'axios';
 import { DateTime } from 'luxon';
 
-import {
-  ZohoAuthCodeResponse,
-  ZohoAuthCode,
-  ZohoAuthTokenResponse,
-  ZohoAuthToken,
-} from './zoho-oauth.types';
-
-const BASE_URL = 'https://accounts.zoho.com';
-
-export interface IOAuth {
-  generateAuth(): Promise<void>;
-}
+import { ZohoRequest } from '../requests';
+import { ZohoAuthToken, ZohoAuthTokenResponse } from './zoho-oauth.types';
 
 export interface OAuthParams {
   version?: 'v2';
@@ -22,66 +12,42 @@ export interface OAuthParams {
   appLinkName: string;
 }
 
-export class OAuthRequestParams {
-  clientId = process.env['ZOHO_CLIENT_ID'] || 'unset';
-  clientSecret = process.env['ZOHO_CLIENT_SECRET'] || 'unset';
-  redirectUri = process.env['ZOHO_REDIRECT_URI'] || 'unset';
-  accountOwnerName = process.env['ZOHO_ACCOUNT_OWNER_NAME'] || 'unset';
-  appName = process.env['ZOHO_APP_NAME'] || 'unset';
-
-  constructor(params: OAuthParams) {
-    this.accountOwnerName = params.accountOwnerName ?? this.accountOwnerName;
-    this.appName = params.appLinkName ?? this.appName;
-  }
+export interface GenerateTokenParams {
+  redirectUri: string;
+  code: string;
 }
 
-export class OAuthCodeRequest {
-  baseURL = `${BASE_URL}}/oauth/v2/auth`;
-
-  async generateAuthCode(params: OAuthRequestParams) {
-    const urlParams = new URLSearchParams();
-
-    urlParams.set('client_id', params.clientId);
-    urlParams.set('response_type', 'code');
-    urlParams.set('access_type', 'offline');
-    urlParams.set('redirect_uri', params.redirectUri);
-
-    urlParams.set('scope', 'ZohoCreator.fullaccess.all');
-
-    const authURL = `${this.baseURL}?${urlParams.toString()}`;
-    const response = await axios.get<unknown, AxiosResponse<ZohoAuthCodeResponse>>(authURL);
-
-    return {
-      code: response.data.code,
-      location: response.data.location,
-      accountsServer: response.data['accounts-server'],
-    };
-  }
+export interface RefreshTokenParams {
+  refreshToken: string;
 }
 
-export class OAuthTokenRequest {
-  baseURL = `${BASE_URL}}/oauth/v2/token`;
+export class OAuth {
+  private refreshToken: string | undefined;
+  private accessToken: string | undefined;
+  private accessTokenExpiration: string | undefined;
 
-  async generateAuthToken(accessCode: ZohoAuthCode, params: OAuthRequestParams) {
+  constructor(private readonly request: ZohoRequest) {}
+
+  async generateAuthToken(params: GenerateTokenParams) {
     const urlParams = new URLSearchParams();
     urlParams.set('grant_type', 'authorization_code');
-    urlParams.set('client_id', params.clientId);
-    urlParams.set('client_secret', params.clientSecret);
+    urlParams.set('client_id', this.request.params.clientId);
+    urlParams.set('client_secret', this.request.params.clientId);
     urlParams.set('redirect_uri', params.redirectUri);
-    urlParams.set('code', accessCode.code);
+    urlParams.set('code', params.code);
 
-    const authURL = `${this.baseURL}?${urlParams.toString()}`;
+    const authURL = `${this.request.params.accountsHost}/oauth/v2/token?${urlParams.toString()}`;
 
     return await this.requestToken(authURL);
   }
 
-  async refreshToken(refreshToken: string, params: OAuthRequestParams) {
+  async getRefreshToken(params: RefreshTokenParams) {
     const urlParams = new URLSearchParams();
-    urlParams.set('refresh_token', refreshToken);
-    urlParams.set('client_id', params.clientId);
-    urlParams.set('client_secret', params.clientSecret);
+    urlParams.set('refresh_token', params.refreshToken);
+    urlParams.set('client_id', this.request.params.clientId);
+    urlParams.set('client_secret', this.request.params.clientSecret);
 
-    const authURL = `${this.baseURL}?${urlParams.toString()}`;
+    const authURL = `${this.request.params.accountsHost}?${urlParams.toString()}`;
 
     return await this.requestToken(authURL);
   }
@@ -101,48 +67,41 @@ export class OAuthTokenRequest {
 
     return token;
   }
-}
-export class OAuth implements IOAuth {
-  codeRequest: OAuthCodeRequest;
-  tokenRequest: OAuthTokenRequest;
-  accessCode: ZohoAuthCode | undefined;
-  accessToken: ZohoAuthToken | undefined;
-  requestParams: OAuthRequestParams;
 
-  constructor(request: OAuthParams) {
-    this.requestParams = new OAuthRequestParams(request);
-    this.tokenRequest = new OAuthTokenRequest();
-    this.codeRequest = new OAuthCodeRequest();
-  }
+  // async getAuth() {
+  //   if (!this.accessToken) {
+  //     await this.generateAuthToken({ code: '', redirectUri: '' });
+  //     return this.accessToken;
+  //   }
 
-  async getAuth() {
+  //   if (this.accessToken.expiresIn < DateTime.local().toSeconds()) {
+  //     await this.refreshAuth();
+  //     return this.accessToken;
+  //   }
+
+  //   return this.accessToken;
+  // }
+
+  async getAccessToken() {
     if (!this.accessToken) {
-      await this.generateAuth();
-      return this.accessToken;
+      const auth = await this.generateAuthToken({
+        code: '1000.64cf0fe02e385970bf3605b48ef5e9eb.d37859c38c7dbceb45a71a46bad9e15b',
+        redirectUri: 'https://newage.dev',
+      });
+
+      this.accessToken = auth.accessToken;
     }
 
-    if (this.accessToken.expiresIn < DateTime.local().toSeconds()) {
-      await this.refreshAuth();
-      return this.accessToken;
+    // if (this. < DateTime.local().toSeconds()) {
+    //   await this.refreshAuth();
+    //   return this.accessToken;
+    // }
+
+    if (this.refreshToken) {
+      const token = this.getRefreshToken({ refreshToken: this.refreshToken });
     }
 
+    // this.refreshToken({});
     return this.accessToken;
-  }
-
-  async generateAuth() {
-    this.accessCode = await this.codeRequest.generateAuthCode(this.requestParams);
-    this.accessToken = await this.tokenRequest.generateAuthToken(
-      this.accessCode,
-      this.requestParams
-    );
-  }
-
-  async refreshAuth() {
-    if (this.accessToken) {
-      this.accessToken = await this.tokenRequest.refreshToken(
-        this.accessToken.refreshToken,
-        this.requestParams
-      );
-    }
   }
 }

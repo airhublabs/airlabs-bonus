@@ -15,8 +15,7 @@ export class CSVImporterService extends FileImporterService {
 
   async importFile(): Promise<any> {
     /* TODO: Fix CSV Importer */
-    // @ts-ignore
-    const json = await csvToJson.fromFile(this.params.csvFilePath);
-    return json;
+    // const json = await csvToJson.fromFile(this.params.csvFilePath);
+    return {};
   }
 }

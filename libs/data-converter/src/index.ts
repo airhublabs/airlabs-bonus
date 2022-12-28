@@ -19,6 +19,6 @@ const bootstrap = async () => {
   transformer.transformAndExport();
 };
 
-bootstrap();
+// bootstrap();
 
 export { DataTransformer, CSVExporter, CSVImporterService, JSONImporterService };

@@ -8,6 +8,8 @@ export interface RequestParams {
   accountsHost?: string;
   accountOwnerName: string;
   appLinkName: string;
+  clientId: string;
+  clientSecret: string;
 }
 
 export class ZohoApi {
