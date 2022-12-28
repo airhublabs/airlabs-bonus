@@ -43,7 +43,7 @@ model Report {
   // bonus_eligible           Boolean  @default(false)
   // bonus_amount             Float?
 
-  employee    Employee @relation(fields: [employee_id], references: [id])
+  employee    Employee @relation(fields: [employee_id], references: [id], onDelete: Cascade)
   employee_id Int
 }
 

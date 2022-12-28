@@ -1,5 +1,6 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { EmployeesApi, ReportsApi } from '@airlabs-bonus/types';
+import { ChildProcess } from 'child_process';
 import { DateTime } from 'luxon';
 
 interface ScanningServiceParams {
@@ -176,31 +177,48 @@ export class ScanningService {
 
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
           const sameDayFlights = reports.filter(
-            (report) => DateTime.fromISO(report.from_date).day === startDate.day
+            (report) =>
+              DateTime.fromISO(report.from_date).day === startDate.day &&
+              DateTime.fromISO(report.from_date).month === startDate.month
           );
+
           const lastFlightOfDay = sameDayFlights[sameDayFlights.length - 1];
+          const isSingleFlight = sameDayFlights.length === 1;
           const flightHasPositioning = sameDayFlights.find((_report) => _report.code === 'POS');
-          const hasLeftHomebase = sameDayFlights.find(
+          const isLeavingHomebase = sameDayFlights.find(
             (_report) => _report.arr_string === this.params.employee.homebase
           );
+          const lastFlightIsHomebase = lastFlightOfDay.arr_string === this.params.employee.homebase;
+          const lastFlightIsSameDay =
+            startDate.day == DateTime.fromISO(lastFlightOfDay.to_date).day;
 
-          const lastFlightIsHomebase = lastFlightOfDay.arr_string !== this.params.employee.homebase;
-
-          if (
-            hasLeftHomebase ||
-            lastFlightIsHomebase ||
-            flightHasPositioning
-            // TODO: Check if it's a minute over
-          ) {
-            this.bonusReportRows.push({
-              type: 'per_diem',
-              date: report.start_date,
-              locationCode: report.arr_string,
-              locationString: 'not set',
-            });
-
-            acc.perDiem += 1;
+          /* Is Same Day flights */
+          if (isLeavingHomebase && !isSingleFlight) {
+            if (lastFlightIsSameDay || !flightHasPositioning && !lastFlightOfDay.registration)
+              return acc;
           }
+
+          /* Check valid same day flight */
+          // if (
+          //   isLeavingHomebase &&
+          //   lastFlightIsHomebase &&
+          //   lastFlightIsSameDay &&
+          //   !flightHasPositioning
+          // )
+          //   return acc;
+
+          // /* Has same day flight / valid per diem */
+          // if (!isSingleFlight && !lastFlightOfDay.registration) return acc;
+
+          this.bonusReportRows.push({
+            type: 'per_diem',
+            date: report.start_date,
+            locationCode: report.arr_string,
+            locationString: 'not set',
+          });
+
+          acc.perDiem += 1;
+          this.dangerousProjectIds.push(report.id);
         }
 
         /* Arrivng with previous dangerous project */
