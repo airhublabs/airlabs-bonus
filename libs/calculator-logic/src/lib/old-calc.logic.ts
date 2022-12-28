@@ -1,6 +1,5 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { EmployeesApi, ReportsApi } from '@airlabs-bonus/types';
-import { ChildProcess } from 'child_process';
 import { DateTime } from 'luxon';
 
 interface ScanningServiceParams {
@@ -177,39 +176,68 @@ export class ScanningService {
 
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
           const sameDayFlights = reports.filter(
-            (report) =>
-              DateTime.fromISO(report.from_date).day === startDate.day &&
-              DateTime.fromISO(report.from_date).month === startDate.month
+            (report) => DateTime.fromISO(report.from_date).day === startDate.day
           );
-
           const lastFlightOfDay = sameDayFlights[sameDayFlights.length - 1];
-          const isSingleFlight = sameDayFlights.length === 1;
           const flightHasPositioning = sameDayFlights.find((_report) => _report.code === 'POS');
-          const isLeavingHomebase = sameDayFlights.find(
+          const hasLeftHomebase = sameDayFlights.find(
             (_report) => _report.arr_string === this.params.employee.homebase
           );
-          const lastFlightIsHomebase = lastFlightOfDay.arr_string === this.params.employee.homebase;
-          const lastFlightIsSameDay =
-            startDate.day == DateTime.fromISO(lastFlightOfDay.to_date).day;
 
-          /* Is Same Day flights */
-          if (isLeavingHomebase && !isSingleFlight) {
-            if (lastFlightIsSameDay || !flightHasPositioning && !lastFlightOfDay.registration)
-              return acc;
+          const lastFlightIsHomebase = lastFlightOfDay.arr_string !== this.params.employee.homebase;
+
+          if (
+            hasLeftHomebase ||
+            lastFlightIsHomebase ||
+            flightHasPositioning
+            // TODO: Check if it's a minute over
+          ) {
+            this.bonusReportRows.push({
+              type: 'per_diem',
+              date: report.start_date,
+              locationCode: report.arr_string,
+              locationString: 'not set',
+            });
+
+            acc.perDiem += 1;
           }
-
-          this.bonusReportRows.push({
-            type: 'per_diem',
-            date: report.start_date,
-            locationCode: report.arr_string,
-            locationString: 'not set',
-          });
-
-          acc.perDiem += 1;
-          this.dangerousProjectIds.push(report.id);
         }
 
-        /* Arrivng with previous dangerous project */
+        if (
+          (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
+          this.leftHomebaseDate &&
+          this.isAssignedDangerousProject
+        ) {
+          const dangerousStart = this.leftHomebaseDate || startDate.startOf('month').toISO();
+          const dangerousEnd =
+            DateTime.fromISO(report.to_date).month ==
+            DateTime.fromISO(report.from_date).plus({ month: 1 }).month
+              ? DateTime.fromISO(report.from_date)
+              : DateTime.fromISO(report.to_date);
+
+          if (this.isAssignedDangerousProject) {
+            acc.secruityBonusDays +=
+              this.getLeftHomebaseDateDifference({
+                projectStartDate: dangerousStart,
+                projectEndDate: dangerousEnd.toISO(),
+              }) + 1;
+          }
+
+          console.log('Calculating bonus', {
+            start: dangerousStart,
+            dangerousEnd: dangerousEnd.toISO(),
+          });
+
+          const dangerousIds = this.getDangerousIds({
+            dangerousStart: dangerousStart,
+            endDate: report.start_date,
+          });
+          this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
+
+          this.leftHomebaseDate = undefined;
+          this.isAssignedDangerousProject = false;
+        }
+
         if (
           (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
           previousDangerousProject
@@ -235,42 +263,6 @@ export class ScanningService {
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
           previousDangerousProject = false;
-        }
-
-        /* Arriving at homebase with dangerous project */
-        if (
-          (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
-          this.leftHomebaseDate &&
-          this.isAssignedDangerousProject
-        ) {
-          const dangerousStart = this.leftHomebaseDate || startDate.startOf('month').toISO();
-          const dangerousEnd =
-            DateTime.fromISO(report.to_date).month ==
-            DateTime.fromISO(report.from_date).plus({ month: 1 }).month
-              ? DateTime.fromISO(report.from_date).startOf('day')
-              : DateTime.fromISO(report.to_date).startOf('day');
-
-          if (this.isAssignedDangerousProject) {
-            acc.secruityBonusDays +=
-              this.getLeftHomebaseDateDifference({
-                projectStartDate: dangerousStart,
-                projectEndDate: dangerousEnd.toISO(),
-              }) + 1;
-          }
-
-          console.log('Calculating bonus', {
-            start: dangerousStart,
-            dangerousEnd: dangerousEnd.toISO(),
-          });
-
-          const dangerousIds = this.getDangerousIds({
-            dangerousStart: dangerousStart,
-            endDate: report.start_date,
-          });
-          this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
-
-          this.leftHomebaseDate = undefined;
-          this.isAssignedDangerousProject = false;
         }
 
         if (startDate.day !== lastScannedDay) {
