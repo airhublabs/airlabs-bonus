@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 
 import { ZohoRequest } from '../requests';
 import { ZohoAuthToken, ZohoAuthTokenResponse } from './zoho-oauth.types';
+import { zohoConfig } from '../mdb/zoho-config.service';
 
 export interface OAuthParams {
   version?: 'v2';
@@ -17,6 +18,14 @@ export interface GenerateTokenParams {
   code: string;
 }
 
+export interface GenerateAccessTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  api_domain: string;
+  token_type: string;
+}
+
 export interface RefreshTokenParams {
   refreshToken: string;
 }
@@ -28,17 +37,17 @@ export class OAuth {
 
   constructor(private readonly request: ZohoRequest) {}
 
-  async generateAuthToken(params: GenerateTokenParams) {
+  async generateAccessToken(params: GenerateTokenParams) {
     const urlParams = new URLSearchParams();
     urlParams.set('grant_type', 'authorization_code');
     urlParams.set('client_id', this.request.params.clientId);
-    urlParams.set('client_secret', this.request.params.clientId);
+    urlParams.set('client_secret', this.request.params.clientSecret);
     urlParams.set('redirect_uri', params.redirectUri);
     urlParams.set('code', params.code);
 
     const authURL = `${this.request.params.accountsHost}/oauth/v2/token?${urlParams.toString()}`;
 
-    return await this.requestToken(authURL);
+    return axios.post<GenerateAccessTokenResponse>(authURL);
   }
 
   async getRefreshToken(params: RefreshTokenParams) {
@@ -49,59 +58,68 @@ export class OAuth {
 
     const authURL = `${this.request.params.accountsHost}?${urlParams.toString()}`;
 
-    return await this.requestToken(authURL);
+    return axios.post<GenerateAccessTokenResponse>(authURL);
   }
 
-  async requestToken(authURL: string) {
-    const response = await axios.post<unknown, AxiosResponse<ZohoAuthTokenResponse>>(authURL);
-    const token: ZohoAuthToken = {
-      accessToken: response.data.access_token,
-      refreshToken: response.data.refresh_token,
-      expiresIn: response.data.expires_in,
-      apiDomain: response.data.api_domain,
-      tokenType: response.data.token_type,
-    };
+  /*
+Zoho Request Wrapper
 
-    // convert seconds to unix timestamp
-    token.expiresIn = DateTime.local().plus({ seconds: token.expiresIn }).toSeconds();
-
-    return token;
-  }
-
-  // async getAuth() {
-  //   if (!this.accessToken) {
-  //     await this.generateAuthToken({ code: '', redirectUri: '' });
-  //     return this.accessToken;
-  //   }
-
-  //   if (this.accessToken.expiresIn < DateTime.local().toSeconds()) {
-  //     await this.refreshAuth();
-  //     return this.accessToken;
-  //   }
-
-  //   return this.accessToken;
-  // }
-
+Scopes:
+- ZohoCreator.report.READ,ZohoCreator.report.create,ZohoCreator.report.UPDATE,ZohoCreator.form.ALL,ZohoCreator.form.CREATE,ZohoCreator.form.READ
+*/
   async getAccessToken() {
-    if (!this.accessToken) {
-      const auth = await this.generateAuthToken({
-        code: '1000.64cf0fe02e385970bf3605b48ef5e9eb.d37859c38c7dbceb45a71a46bad9e15b',
+    if (!this.accessToken && !(await zohoConfig.retrive('access_token'))) {
+      console.log('Generating access token');
+
+      const configAccessToken = zohoConfig.retrive('access_token');
+
+      if (configAccessToken) return configAccessToken;
+
+      const auth = await this.generateAccessToken({
+        code: '1000.bc8905411476aa3dba5fc8553f56c87d.37710cf70fb0e2efb01e5fdbe485bb8a',
         redirectUri: 'https://newage.dev',
       });
 
-      this.accessToken = auth.accessToken;
+      zohoConfig.upsert('access_token', auth.data.access_token);
+      zohoConfig.upsert(
+        'access_token_expiration',
+        DateTime.now().plus({ second: auth.data.expires_in }).toISO()
+      );
+      zohoConfig.upsert('refresh_token', auth.data.refresh_token);
+
+      this.accessToken = auth.data.access_token;
+      this.refreshToken = auth.data.refresh_token;
+      this.accessTokenExpiration = DateTime.now().plus({ second: auth.data.expires_in }).toISO();
+
+      return auth.data.access_token;
     }
+    /*
+    const refreshTokenExpiration = DateTime.fromISO(
+      this.accessTokenExpiration || (await zohoConfig.retrive('access_token_expiration'))
+    );
 
-    // if (this. < DateTime.local().toSeconds()) {
-    //   await this.refreshAuth();
-    //   return this.accessToken;
-    // }
+    if (refreshTokenExpiration.diffNow('milliseconds').milliseconds < 0) {
+      const refreshToken = this.refreshToken || (await zohoConfig.retrive('refresh_token'));
+      const response = await this.getRefreshToken({ refreshToken: refreshToken });
 
-    if (this.refreshToken) {
-      const token = this.getRefreshToken({ refreshToken: this.refreshToken });
+      zohoConfig.upsert('access_token', response.data.access_token);
+      zohoConfig.upsert(
+        'access_token_expiration',
+        DateTime.now().plus({ second: response.data.expires_in }).toISO()
+      );
+      zohoConfig.upsert('refresh_token', response.data.refresh_token);
+
+      this.accessToken = response.data.access_token;
+      this.refreshToken = response.data.refresh_token;
+      this.accessTokenExpiration = DateTime.now()
+        .plus({ second: response.data.expires_in })
+        .toISO();
+
+      console.log('Token refreshed');
+
+      return response.data.access_token;
     }
-
-    // this.refreshToken({});
+ */
     return this.accessToken;
   }
 }

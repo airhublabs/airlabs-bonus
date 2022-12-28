@@ -16,11 +16,9 @@ export class ZohoApi {
   public OAuth!: OAuth;
   public PerDiems: PerDiems;
 
-  // accountOwnerName, appLinkName
   constructor(private readonly params: RequestParams) {
     const request = new ZohoRequest(params);
 
     this.PerDiems = new PerDiems(request);
-    // this.OAuth = new OAuth(request);
   }
 }

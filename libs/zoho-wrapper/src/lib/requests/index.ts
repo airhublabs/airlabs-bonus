@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import { OAuth } from '../auth/zoho-oauth.api';
 import { PerDiems } from './per-diems.api';
 import { RequestParams } from '../../zoho';
@@ -59,7 +59,7 @@ export class ZohoRequest {
   ) {
     options = { ...this.DEFAULT_REQUEST_OPTIONS, ...options };
     const URL = `${this.BASE_URL}/${path}`;
-    const accessToken = this.OAuth.getAccessToken();
+    const accessToken = await this.OAuth.getAccessToken();
 
     try {
       const response = await axios.request<T>({
@@ -76,15 +76,16 @@ export class ZohoRequest {
       });
 
       return response;
+
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error.response?.data?.code === 1030) {
           console.log('Auth error', error.response.data);
         }
       }
-
-      return error;
     }
+
+    return undefined;
   }
 
   /**

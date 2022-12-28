@@ -1,5 +1,8 @@
 import { ZohoApi } from './zoho';
 import * as dotenv from 'dotenv';
+import { Config, JsonDB } from 'node-json-db';
+import { zohoConfig } from './lib/mdb/zoho-config.service';
+import { mdb } from './lib/mdb/mdb';
 
 dotenv.config();
 
@@ -26,9 +29,25 @@ const bootstrap = async () => {
     clientSecret: ZOHO_ENV.clientSecret,
   });
 
-  const response = await api.PerDiems.list();
+  try {
+    const response = await api.PerDiems.list();
+    console.log(response);
+  } catch (error) {
+    console.log('Error', error);
+  }
 };
 
-bootstrap();
+// bootstrap();
+
+const test = async () => {
+  const data = await zohoConfig.retrive('access_token_expiration');
+  // const dataw = await zohoConfig.upsert('access_token', 'adwad');
+  // await zohoConfig.upsert('refresh_token', 'adwad');
+
+  console.log(data);
+  return data;
+};
+
+test();
 
 export { ZohoApi };
