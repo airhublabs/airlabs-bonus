@@ -203,41 +203,7 @@ export class ScanningService {
           }
         }
 
-        if (
-          (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
-          this.leftHomebaseDate &&
-          this.isAssignedDangerousProject
-        ) {
-          const dangerousStart = this.leftHomebaseDate || startDate.startOf('month').toISO();
-          const dangerousEnd =
-            DateTime.fromISO(report.to_date).month ==
-            DateTime.fromISO(report.from_date).plus({ month: 1 }).month
-              ? DateTime.fromISO(report.from_date)
-              : DateTime.fromISO(report.to_date);
-
-          if (this.isAssignedDangerousProject) {
-            acc.secruityBonusDays +=
-              this.getLeftHomebaseDateDifference({
-                projectStartDate: dangerousStart,
-                projectEndDate: dangerousEnd.toISO(),
-              }) + 1;
-          }
-
-          console.log('Calculating bonus', {
-            start: dangerousStart,
-            dangerousEnd: dangerousEnd.toISO(),
-          });
-
-          const dangerousIds = this.getDangerousIds({
-            dangerousStart: dangerousStart,
-            endDate: report.start_date,
-          });
-          this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
-
-          this.leftHomebaseDate = undefined;
-          this.isAssignedDangerousProject = false;
-        }
-
+        /* Arrivng with previous dangerous project */
         if (
           (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
           previousDangerousProject
@@ -263,6 +229,42 @@ export class ScanningService {
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
           previousDangerousProject = false;
+        }
+
+        /* Arriving at homebase with dangerous project */
+        if (
+          (this.isArrivingAtHomebase(report) || i === this.params.reports.length - 1) &&
+          this.leftHomebaseDate &&
+          this.isAssignedDangerousProject
+        ) {
+          const dangerousStart = this.leftHomebaseDate || startDate.startOf('month').toISO();
+          const dangerousEnd =
+            DateTime.fromISO(report.to_date).month ==
+            DateTime.fromISO(report.from_date).plus({ month: 1 }).month
+              ? DateTime.fromISO(report.from_date).startOf('day')
+              : DateTime.fromISO(report.to_date).startOf('day');
+
+          if (this.isAssignedDangerousProject) {
+            acc.secruityBonusDays +=
+              this.getLeftHomebaseDateDifference({
+                projectStartDate: dangerousStart,
+                projectEndDate: dangerousEnd.toISO(),
+              }) + 1;
+          }
+
+          console.log('Calculating bonus', {
+            start: dangerousStart,
+            dangerousEnd: dangerousEnd.toISO(),
+          });
+
+          const dangerousIds = this.getDangerousIds({
+            dangerousStart: dangerousStart,
+            endDate: report.start_date,
+          });
+          this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
+
+          this.leftHomebaseDate = undefined;
+          this.isAssignedDangerousProject = false;
         }
 
         if (startDate.day !== lastScannedDay) {

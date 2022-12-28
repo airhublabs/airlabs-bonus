@@ -1,7 +1,7 @@
+import { ZohoApi } from '@airlabs-bonus/zoho-wrapper';
 import { Module } from '@nestjs/common';
-import { AutomationService } from './automation.service';
 import { AutomationController } from './automation.controller';
-import { Zoho, ZohoApi } from '@airlabs-bonus/zoho-wrapper';
+import { AutomationService } from './automation.service';
 
 @Module({
   controllers: [AutomationController],

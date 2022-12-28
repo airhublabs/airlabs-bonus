@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { DateTime } from "luxon";
+import { DateTime } from 'luxon';
 
 import {
   ZohoAuthCodeResponse,
@@ -8,7 +8,7 @@ import {
   ZohoAuthToken,
 } from './zoho-oauth.types';
 
-const BASE_URL = "https://accounts.zoho.com";
+const BASE_URL = 'https://accounts.zoho.com';
 
 export interface IOAuth {
   generateAuth(): Promise<void>;
@@ -131,7 +131,10 @@ export class OAuth implements IOAuth {
 
   async generateAuth() {
     this.accessCode = await this.codeRequest.generateAuthCode(this.requestParams);
-    this.accessToken = await this.tokenRequest.generateAuthToken(this.accessCode, this.requestParams);
+    this.accessToken = await this.tokenRequest.generateAuthToken(
+      this.accessCode,
+      this.requestParams
+    );
   }
 
   async refreshAuth() {
@@ -142,4 +145,4 @@ export class OAuth implements IOAuth {
       );
     }
   }
-};
+}
