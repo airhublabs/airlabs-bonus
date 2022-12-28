@@ -30,7 +30,7 @@ interface CabinCrewData {
 }
 
 let partialCabinCrewSlice = data['Report'] as unknown as CabinCrewData['Report'];
-// partialCabinCrewSlice = partialCabinCrewSlice.slice(0, 10000);
+partialCabinCrewSlice = partialCabinCrewSlice.slice(0, 25000);
 
 const USERS = (params: CabinCrewData['Report'][number]) => {
   const HOMEBASES = {
@@ -60,8 +60,8 @@ const createEmployees = async () => {
 
 const sortRawReports = (data: CabinCrewData['Report']) => {
   return data.sort((a, z) => {
-    const aDate = DateTime.fromFormat(a.StartDate, 'dd-MMM-yyyy');
-    const zDate = DateTime.fromFormat(z.StartDate, 'dd-MMM-yyyy');
+    const aDate = DateTime.fromFormat(`${a.ValidFromDate} ${a.ValidFromTime}`, 'dd-MMM-yyyy hh:mm:ss');
+    const zDate = DateTime.fromFormat(`${z.StartDate} ${z.ValidFromTime}`, 'dd-MMM-yyyy hh:mm:ss');
 
     if (a.EmpNo < z.EmpNo) return -1;
     if (a.EmpNo > z.EmpNo) return 1;
@@ -116,7 +116,6 @@ const createReports = async () => {
       );
 
       const nextReport = reports?.[i + 1];
-      const lastReport = reports?.[i - 1];
 
       /**
        * Cases that are breaking
@@ -137,8 +136,8 @@ const createReports = async () => {
               prisma.report.create({
                 data: {
                   arr_string: nextReport.DepString,
-                  dep_string: lastReport.ArrString,
-                  code: 'MISSING FILL ' + DateTime.fromISO(fromDate).toFormat('dd-MM-yy mm:hh'),
+                  dep_string: report.ArrString,
+                  code: 'MISSING FILL ',
                   project_name_text: report.ProjectNameText,
                   roster_designators: report.RosterDesignators,
                   registration: report.Registration,
