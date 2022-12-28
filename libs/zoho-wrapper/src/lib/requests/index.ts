@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { OAuth } from '../auth/zoho-oauth.api';
 import { PerDiems } from './per-diems.api';
+import { RequestParams } from '../../zoho';
 
 export const filterEmptyKeys = (object: { [key: string]: any }) => {
   return Object.entries(object).reduce((acc: any, [key, value]) => {
@@ -17,14 +18,6 @@ type RequestType = 'get' | 'post' | 'patch' | 'put' | 'delete';
 
 interface RequestOptions {
   credentials: boolean;
-}
-
-interface RequestParams {
-  version?: 'v2';
-  apiHost?: string;
-  accountsHost?: string;
-  accountOwnerName: string;
-  appLinkName: string;
 }
 
 interface RequestData {
@@ -115,18 +108,5 @@ export class ZohoRequest {
 
   async delete<T>(path: string, params?: object) {
     return this.request<T>('delete', path, { params });
-  }
-}
-
-export class ZohoApi {
-  public OAuth: OAuth;
-  public PerDiems: PerDiems;
-
-  // accountOwnerName, appLinkName
-  constructor(private readonly params: RequestParams) {
-    const request = new ZohoRequest(params);
-
-    this.PerDiems = new PerDiems(request);
-    this.OAuth = new OAuth(request);
   }
 }

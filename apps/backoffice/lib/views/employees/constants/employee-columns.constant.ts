@@ -21,6 +21,9 @@ export const EMPLOYEE_COLUMNS: GridColDef<ReportsApi.RetriveResponseBody>[] = [
     },
   },
   {
+    field: 'registration',
+  },
+  {
     field: 'To Time',
     renderCell: (params) => {
       const toTime = DateTime.fromISO(params.row.to_date);

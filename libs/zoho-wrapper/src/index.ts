@@ -1,3 +1,1 @@
-export { Zoho } from "./zoho";
-export { ZohoApi } from './lib/requests';
-export { OAuth } from './lib/auth';
+export { ZohoApi } from './zoho';
