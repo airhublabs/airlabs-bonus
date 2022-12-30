@@ -60,7 +60,10 @@ const createEmployees = async () => {
 
 const sortRawReports = (data: CabinCrewData['Report']) => {
   return data.sort((a, z) => {
-    const aDate = DateTime.fromFormat(`${a.ValidFromDate} ${a.ValidFromTime}`, 'dd-MMM-yyyy hh:mm:ss');
+    const aDate = DateTime.fromFormat(
+      `${a.ValidFromDate} ${a.ValidFromTime}`,
+      'dd-MMM-yyyy hh:mm:ss'
+    );
     const zDate = DateTime.fromFormat(`${z.StartDate} ${z.ValidFromTime}`, 'dd-MMM-yyyy hh:mm:ss');
 
     if (a.EmpNo < z.EmpNo) return -1;
@@ -116,11 +119,46 @@ const createReports = async () => {
       );
 
       const nextReport = reports?.[i + 1];
+      const lastReport = reports?.[i - 1];
 
-      /**
-       * Cases that are breaking
-       * - Invalid format of ARR & DEP string for missing days
-       */
+      /* todo: Adding wrong days */
+      if (lastReport) {
+        const { fromDate: lastFromDate } = transformRosterDate({ ...lastReport });
+
+        /* Is missing first day */
+        if (DateTime.fromISO(fromDate).day === 2 && DateTime.fromISO(lastFromDate).day !== 1) {
+          acc.push(
+            prisma.report.create({
+              data: {
+                arr_string: lastReport.ArrString,
+                dep_string: report.DepString,
+                code: 'MISSING FIRST ',
+                project_name_text: report.ProjectNameText,
+                roster_designators: report.RosterDesignators,
+                registration: report.Registration,
+                vehicle_type: report.VehicleType,
+                start_date: DateTime.fromISO(fromDate).startOf('month').toISO(),
+                from_date: DateTime.fromISO(fromDate).startOf('month').toISO(),
+                to_date: DateTime.fromISO(toDate).startOf('month').toISO(),
+                scheduled_hours_duration: report.ScheduledHoursDuration,
+                employee: {
+                  // connect: {emp_no: report.EmpNo}
+                  connectOrCreate: {
+                    where: { emp_no: report.EmpNo },
+                    create: {
+                      homebase: 'DEFAULT',
+                      emp_no: report.EmpNo,
+                      human_resource_brq: report.HumanResourceBRQ,
+                      human_resource_full_name: report.HumanResourceFullName,
+                      human_resource_rank: report.HumanResourceRank,
+                    },
+                  },
+                },
+              },
+            })
+          );
+        }
+      }
 
       if (nextReport) {
         const { fromDate: nextFromDate } = transformRosterDate(nextReport);
