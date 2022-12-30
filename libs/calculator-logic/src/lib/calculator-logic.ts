@@ -167,7 +167,6 @@ export class ScanningService {
 
         if (this.isLeavingHomebase(report) && !this.leftHomebaseDate) {
           this.leftHomebaseDate = report.from_date;
-          console.debug('Left homebase', { date: report.from_date });
         }
 
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
@@ -188,7 +187,7 @@ export class ScanningService {
           const flightHasRegistration = lastFlightOfDay.registration;
 
           /* Is Same Day flights */
-          const notEligeble = () => {
+          const isNotEligible = () => {
             const notEligble =
               isLeavingHomebase &&
               isMultiDayFlight &&
@@ -198,7 +197,7 @@ export class ScanningService {
             return notEligble && !flightHasPositioning;
           };
 
-          if (notEligeble()) return acc;
+          if (isNotEligible()) return acc;
 
           this.bonusReportRows.push({
             type: 'per_diem',

@@ -30,21 +30,6 @@ interface CabinCrewData {
 }
 
 let partialCabinCrewSlice = data['Report'] as unknown as CabinCrewData['Report'];
-// partialCabinCrewSlice = partialCabinCrewSlice.slice(0, 25000);
-
-const USERS = (params: CabinCrewData['Report'][number]) => {
-  const HOMEBASES = {
-    RIC: 'LIS',
-    TTS: 'ATH',
-    SAT: 'KTW',
-    PKM: 'WAW',
-    PAP: 'ATH',
-    DIC: 'OLD',
-    DRS: 'BUD',
-  };
-
-  return HOMEBASES[params.EmpNo];
-};
 
 const createEmployees = async () => {
   await prisma.employee.createMany({
@@ -85,8 +70,10 @@ const createReports = async () => {
   await prisma.$transaction(
     sortedReports.reduce((acc, report, i, reports) => {
       const { fromDate, toDate } = transformRosterDate({ ...report });
+      let lFromDate = DateTime.fromISO(fromDate);
 
       console.log('Seeding report count: ', i);
+
       acc.push(
         prisma.report.create({
           data: {
@@ -119,78 +106,34 @@ const createReports = async () => {
       );
 
       const nextReport = reports?.[i + 1];
-      const lastReport = reports?.[i - 1];
-
-      /* todo: Adding wrong days */
-      if (lastReport) {
-        const { fromDate: lastFromDate } = transformRosterDate({ ...lastReport });
-
-        /* Is missing first day */
-        if (DateTime.fromISO(fromDate).day === 2 && DateTime.fromISO(lastFromDate).day !== 1) {
-          acc.push(
-            prisma.report.create({
-              data: {
-                arr_string: lastReport.ArrString,
-                dep_string: report.DepString,
-                code: 'MISSING FIRST ',
-                project_name_text: report.ProjectNameText,
-                roster_designators: report.RosterDesignators,
-                registration: report.Registration,
-                vehicle_type: report.VehicleType,
-                start_date: DateTime.fromISO(fromDate).startOf('month').toISO(),
-                from_date: DateTime.fromISO(fromDate).startOf('month').toISO(),
-                to_date: DateTime.fromISO(toDate).startOf('month').toISO(),
-                scheduled_hours_duration: report.ScheduledHoursDuration,
-                employee: {
-                  // connect: {emp_no: report.EmpNo}
-                  connectOrCreate: {
-                    where: { emp_no: report.EmpNo },
-                    create: {
-                      homebase: 'DEFAULT',
-                      emp_no: report.EmpNo,
-                      human_resource_brq: report.HumanResourceBRQ,
-                      human_resource_full_name: report.HumanResourceFullName,
-                      human_resource_rank: report.HumanResourceRank,
-                    },
-                  },
-                },
-              },
-            })
-          );
-        }
-      }
 
       if (nextReport) {
-        const { fromDate: nextFromDate } = transformRosterDate(nextReport);
+        const { fromDate: nextFromDate } = transformRosterDate({ ...nextReport });
+        const lNextFromDate = DateTime.fromISO(nextFromDate);
 
-        if (DateTime.fromISO(nextFromDate).day > DateTime.fromISO(fromDate).day + 1) {
-          const lNextFromDate = DateTime.fromISO(nextFromDate);
-          const lFromDate = DateTime.fromISO(fromDate);
+        const differenceInDays =
+          lNextFromDate.startOf('day').diff(lFromDate.startOf('day'), ['day']).days - 1;
 
-          const differenceInDays = lNextFromDate.day - lFromDate.day - 1;
-
-          Array.from({ length: differenceInDays }).map((_, i) => {
+        if (differenceInDays >= 1 && differenceInDays < 30) {
+          Array.from({ length: differenceInDays }).forEach((_, i) => {
             acc.push(
               prisma.report.create({
                 data: {
                   arr_string: nextReport.DepString,
                   dep_string: report.ArrString,
-                  code: 'MISSING FILL ',
+                  code: 'MISSING FILL',
                   project_name_text: report.ProjectNameText,
                   roster_designators: report.RosterDesignators,
                   registration: report.Registration,
                   vehicle_type: report.VehicleType,
                   start_date: DateTime.fromISO(fromDate)
-                    .startOf('day')
-                    .plus({ day: i + 1 })
+                    .plus({ day: i + 1, minute: 1 })
                     .toISO(),
                   from_date: DateTime.fromISO(fromDate)
-                    .startOf('day')
-                    .plus({ day: i + 1 })
+                    .plus({ day: i + 1, minute: 1 })
                     .toISO(),
                   to_date: DateTime.fromISO(fromDate)
-                    .startOf('day')
-                    .plus({ day: i + 1 })
+                    .plus({ day: i + 1, minute: 1 })
                     .toISO(),
                   scheduled_hours_duration: report.ScheduledHoursDuration,
                   employee: {
@@ -210,8 +153,6 @@ const createReports = async () => {
               })
             );
           });
-
-          console.log('Detected missing date, filling date');
         }
       }
 
