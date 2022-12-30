@@ -167,12 +167,6 @@ export class ScanningService {
 
         if (this.isLeavingHomebase(report) && !this.leftHomebaseDate) {
           this.leftHomebaseDate = report.from_date;
-          console.debug('Left homebase', { date: report.from_date });
-        }
-
-        if (this.checkAssignedDangerousProject(report)) {
-          this.isAssignedDangerousProject = true;
-          // console.log('Assigned dangerous project', { date: report.from_date });
         }
 
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
@@ -181,27 +175,34 @@ export class ScanningService {
               DateTime.fromISO(report.from_date).day === startDate.day &&
               DateTime.fromISO(report.from_date).month === startDate.month
           );
-
+          const firstFlight = sameDayFlights[0];
           const lastFlightOfDay = sameDayFlights[sameDayFlights.length - 1];
-          const isSingleFlight = sameDayFlights.length === 1;
-          const flightHasPositioning = sameDayFlights.find((_report) => _report.code === 'POS');
-          const isLeavingHomebase = sameDayFlights.find(
-            (_report) => _report.arr_string === this.params.employee.homebase
-          );
+          const isMultiDayFlight = sameDayFlights.length > 1;
+          const flightHasPositioning = !!sameDayFlights.filter((_report) => _report.code === 'POS')
+            .length;
           const lastFlightIsHomebase = lastFlightOfDay.arr_string === this.params.employee.homebase;
+          const isLeavingHomebase = firstFlight.dep_string === this.params.employee.homebase;
           const lastFlightIsSameDay =
-            startDate.day == DateTime.fromISO(lastFlightOfDay.to_date).day;
+            startDate.day === DateTime.fromISO(lastFlightOfDay.to_date).day;
+          const flightHasRegistration = lastFlightOfDay.registration;
 
           /* Is Same Day flights */
-          if (isLeavingHomebase && !isSingleFlight) {
-            if (lastFlightIsSameDay || !flightHasPositioning && !lastFlightOfDay.registration)
-              return acc;
-          }
+          const isNotEligible = () => {
+            const notEligble =
+              isLeavingHomebase &&
+              isMultiDayFlight &&
+              lastFlightIsHomebase &&
+              (lastFlightIsSameDay || !flightHasRegistration);
+
+            return notEligble && !flightHasPositioning;
+          };
+
+          if (isNotEligible()) return acc;
 
           this.bonusReportRows.push({
             type: 'per_diem',
-            date: report.start_date,
-            locationCode: report.arr_string,
+            date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+            locationCode: '',
             locationString: 'not set',
           });
 
@@ -280,7 +281,6 @@ export class ScanningService {
         if (this.isArrivingAtHomebase(report)) {
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
-          console.log('Arrived at homebase', { date: report.start_date });
         }
 
         return acc;
