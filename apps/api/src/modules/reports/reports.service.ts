@@ -131,7 +131,7 @@ export class ReportsService {
       });
 
       const bonus = new ScanningService({
-        dangerZones: ['LIS', 'EBL', 'DSS'],
+        dangerZones: ['EBL', 'DSS'],
         employee: employee,
         previousReports: previousMonthReports,
         reports: currentMonthReports,

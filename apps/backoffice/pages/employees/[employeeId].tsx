@@ -2,7 +2,7 @@
 import { ScanningService } from '@airlabs-bonus/calculator-logic';
 import { Button } from '@mui/material';
 import { Stack } from '@mui/system';
-import { DataGrid, GridEventListener, GridToolbar, GridToolbarExport } from '@mui/x-data-grid';
+import { DataGrid, GridEventListener, GridToolbar } from '@mui/x-data-grid';
 import { useRouter } from 'next/router';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
@@ -24,6 +24,7 @@ const EmployeeView = () => {
     amount: 0,
     secuirtyDays: 0,
     perDiemDays: 0,
+    vnoPerDiemDays: 0,
     dangerousProjectIds: [],
   });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -61,7 +62,7 @@ const EmployeeView = () => {
     });
 
     const bonus = new ScanningService({
-      dangerZones: ['EBL', 'DSS', 'SNGL3', 'LIS'],
+      dangerZones: ['EBL', 'DSS', 'SNGL3'],
       previousReports: previousMonthReports,
       employee: employeeQuery.data,
       reports: currentMonthReports,
@@ -74,6 +75,7 @@ const EmployeeView = () => {
       secuirtyDays: bonusDays.secruityBonusDays,
       amount: bonusDays.secruityBonusDays * 25.5,
       perDiemDays: bonusDays.perDiem,
+      vnoPerDiemDays: bonusDays.vnoPerDiem,
       dangerousProjectIds: bonus.dangerousProjectIds,
     });
   }, [
@@ -121,8 +123,8 @@ const EmployeeView = () => {
             isLoading={reportsQuery.isLoading}
           />
           <DataCard
-            title="Bonus Pay x 25.5"
-            value={`$${Math.round(bonusData.amount)}`}
+            title="VNO Per Diem"
+            value={bonusData.vnoPerDiemDays}
             isLoading={reportsQuery.isLoading}
           />
         </Stack>
