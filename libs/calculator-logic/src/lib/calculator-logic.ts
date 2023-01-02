@@ -46,11 +46,15 @@ export class ScanningService {
       report.arr_string !== this.params.employee.homebase ||
       report.dep_string !== this.params.employee.homebase;
 
+    const isOnReset =
+      report.arr_string == this.params.employee.homebase &&
+      report.dep_string == this.params.employee.homebase;
+
     const isArrivingAtHomebase =
       report.dep_string !== this.params.employee.homebase &&
       report.arr_string === this.params.employee.homebase;
 
-    return isLeavingHomebase || neitherInHomebase || isArrivingAtHomebase;
+    return isLeavingHomebase || neitherInHomebase || isArrivingAtHomebase || isOnReset;
   }
 
   private isArrivingAtHomebase(report: ReportsApi.RetriveResponseBody): boolean {
@@ -156,20 +160,21 @@ export class ScanningService {
       (acc, report, i, reports) => {
         const startDate = DateTime.fromISO(report.start_date);
 
-        /* TODO: Test Code */
-        if (
-          DateTime.fromISO(reports?.[i + 1]?.from_date)?.day &&
-          DateTime.fromISO(reports[i + 1].from_date).day > startDate.day + 1 &&
-          startDate.day !== lastScannedDay
-        ) {
-          console.log('Next is missing ID', report.id);
-        }
-
         if (this.isLeavingHomebase(report) && !this.leftHomebaseDate) {
           this.leftHomebaseDate = report.from_date;
         }
 
+        /*
+        If their homebase is VNO & they leave and arrive in the same day.
+        Condtions:
+        - Only if per diem is 0
+        - Must have registration.
+        */
+
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
+          const isOnRest =
+            report.arr_string === this.params.employee.homebase &&
+            report.dep_string === this.params.employee.homebase;
           const sameDayFlights = reports.filter(
             (report) =>
               DateTime.fromISO(report.from_date).day === startDate.day &&
@@ -184,7 +189,22 @@ export class ScanningService {
           const isLeavingHomebase = firstFlight.dep_string === this.params.employee.homebase;
           const lastFlightIsSameDay =
             startDate.day === DateTime.fromISO(lastFlightOfDay.to_date).day;
-          const flightHasRegistration = lastFlightOfDay.registration;
+          const flightHasRegistration = !!sameDayFlights.filter((_report) => !!_report.registration)
+            .length;
+
+          if (isOnRest && !isMultiDayFlight) return acc;
+
+          /* VNO Per Diem */
+          if (
+            isMultiDayFlight &&
+            report.dep_string === 'VNO' &&
+            this.params.employee.homebase === 'VNO' &&
+            lastFlightIsHomebase &&
+            (flightHasPositioning || flightHasRegistration)
+          ) {
+            this.dangerousProjectIds.push(report.id);
+            acc.vnoPerDiem += 1;
+          }
 
           /* Is Same Day flights */
           const isNotEligible = () => {
@@ -207,7 +227,7 @@ export class ScanningService {
           });
 
           acc.perDiem += 1;
-          this.dangerousProjectIds.push(report.id);
+          // this.dangerousProjectIds.push(report.id);
         }
 
         /* Arrivng with previous dangerous project */
@@ -286,7 +306,11 @@ export class ScanningService {
         return acc;
       },
 
-      { secruityBonusDays: 0, perDiem: 0 } as { secruityBonusDays: number; perDiem: 0 }
+      { secruityBonusDays: 0, perDiem: 0, vnoPerDiem: 0 } as {
+        secruityBonusDays: number;
+        perDiem: 0;
+        vnoPerDiem: 0;
+      }
     );
   }
 }
