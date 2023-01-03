@@ -1,6 +1,5 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { EmployeesApi, ReportsApi } from '@airlabs-bonus/types';
-import { ChildProcess } from 'child_process';
 import { DateTime } from 'luxon';
 
 interface ScanningServiceParams {
@@ -11,9 +10,10 @@ interface ScanningServiceParams {
 }
 
 interface BonusReportRow {
+  id: number;
   locationCode: string;
   locationString: string;
-  type: 'per_diem' | 'security';
+  type: 'per_diem' | 'security' | 'vno_per_diem';
   date: string;
 }
 
@@ -204,6 +204,14 @@ export class ScanningService {
           ) {
             this.dangerousProjectIds.push(report.id);
             acc.vnoPerDiem += 1;
+
+            this.bonusReportRows.push({
+              type: 'vno_per_diem',
+              date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+              locationCode: '',
+              locationString: 'not set',
+              id: report.id,
+            });
           }
 
           /* Is Same Day flights */
@@ -224,10 +232,10 @@ export class ScanningService {
             date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
             locationCode: '',
             locationString: 'not set',
+            id: report.id,
           });
 
           acc.perDiem += 1;
-          // this.dangerousProjectIds.push(report.id);
         }
 
         /* Arrivng with previous dangerous project */
@@ -246,13 +254,15 @@ export class ScanningService {
           const bonusPay = lStartDate.startOf('day').diff(firstOfMonthDate.startOf('day'), ['day']);
           const bonusPayDays = bonusPay.days + 1;
 
-          const dangerousIds = this.getDangerousIds({
-            dangerousStart: firstOfMonthDate.toISO(),
-            endDate: report.start_date,
+          /* TODO: Not working */
+          this.bonusReportRows.push({
+            date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+            id: report.id,
+            locationCode: report.code,
+            locationString: 'unset',
+            type: 'security',
           });
-
           acc.secruityBonusDays += bonusPayDays;
-          this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
           previousDangerousProject = false;
@@ -279,16 +289,14 @@ export class ScanningService {
               }) + 1;
           }
 
-          console.log('Calculating bonus', {
-            start: dangerousStart,
-            dangerousEnd: dangerousEnd.toISO(),
+          /* TODO: Not working */
+          this.bonusReportRows.push({
+            date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+            id: report.id,
+            locationCode: report.code,
+            locationString: 'unset',
+            type: 'security',
           });
-
-          const dangerousIds = this.getDangerousIds({
-            dangerousStart: dangerousStart,
-            endDate: report.start_date,
-          });
-          this.dangerousProjectIds = [...this.dangerousProjectIds, ...dangerousIds];
 
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;

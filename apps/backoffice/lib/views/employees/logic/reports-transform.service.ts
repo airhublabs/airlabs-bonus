@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { ReportsApi } from '@airlabs-bonus/types';
-import { parseStringDuration } from '@airlabs-bonus/utils';
 import { DateTime } from 'luxon';
+
+export interface IBonues {
+  id: number;
+  locationCode: string;
+  locationString: string;
+  type: 'per_diem' | 'security' | 'vno_per_diem';
+  date: string;
+}
 
 /**
  * Strips the redundent `from` dates within the dataset.
@@ -155,16 +162,45 @@ export const transformMostTimeSpentHomebaseV2 = (reports: ReportsApi.ListRespons
   });
 };
 
+export const appendBonuses = (reports: ReportsApi.ListResponseBody, bonsues: IBonues[]) => {
+  return reports.map((report) => {
+    const applicableBonuses = bonsues.filter((bonus) => bonus.id === report.id);
+
+    const bonusObject: { perDiems: number; bonus: number; vnoPerDiems: number } = {
+      bonus: 0,
+      perDiems: 0,
+      vnoPerDiems: 0,
+    };
+
+    applicableBonuses.map((bonus) => {
+      if (bonus.type === 'per_diem') {
+        bonusObject.perDiems += 1;
+      }
+
+      if (bonus.type === 'security') {
+        bonusObject.bonus += 1;
+      }
+
+      if (bonus.type === 'vno_per_diem') {
+        bonusObject.vnoPerDiems += 1;
+      }
+    });
+
+    return { ...report, ...bonusObject };
+  });
+};
+
 /**
  * Preforms a list of transformations on reports
  * @param reports  Array of reports
  * @returns
  */
-export const transformReports = (reports: ReportsApi.ListResponseBody) => {
+export const transformReports = (reports: ReportsApi.ListResponseBody, bonuses: IBonues[]) => {
   if (!reports) return;
 
   const reportsWithRedudentDatesStripped = removeRedundantDateFromReports(reports);
   const reportsWithMostVisited = transformMostTimeSpentHomebaseV2(reportsWithRedudentDatesStripped);
+  const reportsWithBonuses = appendBonuses(reportsWithMostVisited, bonuses);
 
-  return reportsWithMostVisited;
+  return reportsWithBonuses;
 };

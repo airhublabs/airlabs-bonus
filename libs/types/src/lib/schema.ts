@@ -3,6 +3,7 @@
  * Do not make direct changes to the file.
  */
 
+
 export interface paths {
   "/": {
     get: operations["AppController_getData"];
@@ -49,20 +50,28 @@ export interface paths {
     delete: operations["DangerZonesController_remove"];
     patch: operations["DangerZonesController_update"];
   };
+  "/v1/automation/run": {
+    post: operations["AutomationController_run"];
+  };
 }
+
+export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
     CreateEmployeeDto: {
+      contract_type: string;
+      employment_type: string;
+      agency: string;
       emp_no: string;
       homebase: string;
       human_resource_full_name: string;
       human_resource_brq: string;
       human_resource_rank: string;
       /** @enum {string} */
-      type?: "PILOT" | "ATTENDANT";
+      type?: "FLIGHT" | "CABIN";
     };
-    UpdateEmployeeDto: { [key: string]: unknown };
+    UpdateEmployeeDto: Record<string, never>;
     CreateReportDto: {
       start_date: string;
       from_date: string;
@@ -77,13 +86,16 @@ export interface components {
       employee_id: number;
     };
     EmployeeEntity: {
+      contract_type: string;
+      employment_type: string;
+      agency: string;
       emp_no: string;
       homebase: string;
       human_resource_full_name: string;
       human_resource_brq: string;
       human_resource_rank: string;
       /** @enum {string} */
-      type?: "PILOT" | "ATTENDANT";
+      type?: "FLIGHT" | "CABIN";
       id: number;
     };
     ReportEntity: {
@@ -106,6 +118,8 @@ export interface components {
       id: string;
       emp_no: string;
       bonus: number;
+      perDiems: number;
+      vnoPerDiems: number;
     };
     UpdateReportDto: {
       start_date?: string;
@@ -129,28 +143,39 @@ export interface components {
     UpdateDangerZoneDto: {
       zone?: string;
     };
+    CreateAutomationDto: Record<string, never>;
   };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 
+export type external = Record<string, never>;
+
 export interface operations {
+
   AppController_getData: {
-    parameters: {};
     responses: {
-      200: unknown;
+      200: never;
     };
   };
   EmployeesController_list: {
-    parameters: {};
     responses: {
       200: {
         content: {
-          "application/json": components["schemas"]["CreateEmployeeDto"][];
+          "application/json": (components["schemas"]["CreateEmployeeDto"])[];
         };
       };
     };
   };
   EmployeesController_create: {
-    parameters: {};
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateEmployeeDto"];
+      };
+    };
     responses: {
       201: {
         content: {
@@ -158,16 +183,10 @@ export interface operations {
         };
       };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateEmployeeDto"];
-      };
-    };
   };
   EmployeesController_batchUploadReports: {
-    parameters: {};
     responses: {
-      201: unknown;
+      201: never;
     };
   };
   EmployeesController_retrive: {
@@ -204,6 +223,11 @@ export interface operations {
         id: number;
       };
     };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateEmployeeDto"];
+      };
+    };
     responses: {
       200: {
         content: {
@@ -211,24 +235,22 @@ export interface operations {
         };
       };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateEmployeeDto"];
-      };
-    };
   };
   ReportsController_list: {
-    parameters: {};
     responses: {
       200: {
         content: {
-          "application/json": components["schemas"]["ReportEntity"][];
+          "application/json": (components["schemas"]["ReportEntity"])[];
         };
       };
     };
   };
   ReportsController_create: {
-    parameters: {};
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateReportDto"];
+      };
+    };
     responses: {
       201: {
         content: {
@@ -236,26 +258,21 @@ export interface operations {
         };
       };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateReportDto"];
-      };
-    };
   };
   ReportsController_listByEmployee: {
     parameters: {
-      path: {
-        employeeId: number;
-      };
-      query: {
+      query?: {
         start_date?: string;
         end_date?: string;
+      };
+      path: {
+        employeeId: number;
       };
     };
     responses: {
       200: {
         content: {
-          "application/json": components["schemas"]["ReportEntity"][];
+          "application/json": (components["schemas"]["ReportEntity"])[];
         };
       };
     };
@@ -269,15 +286,14 @@ export interface operations {
     responses: {
       200: {
         content: {
-          "application/json": components["schemas"]["BatchGetReportDto"][];
+          "application/json": (components["schemas"]["BatchGetReportDto"])[];
         };
       };
     };
   };
   ReportsController_batchUploadReports: {
-    parameters: {};
     responses: {
-      201: unknown;
+      201: never;
     };
   };
   ReportsController_retrive: {
@@ -314,6 +330,11 @@ export interface operations {
         id: number;
       };
     };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateReportDto"];
+      };
+    };
     responses: {
       200: {
         content: {
@@ -321,34 +342,27 @@ export interface operations {
         };
       };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateReportDto"];
-      };
-    };
   };
   DangerZonesController_list: {
-    parameters: {};
     responses: {
       200: {
         content: {
-          "application/json": components["schemas"]["DangerZoneEntity"][];
+          "application/json": (components["schemas"]["DangerZoneEntity"])[];
         };
       };
     };
   };
   DangerZonesController_create: {
-    parameters: {};
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDangerZoneDto"];
+      };
+    };
     responses: {
       201: {
         content: {
           "application/json": components["schemas"]["DangerZoneEntity"];
         };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateDangerZoneDto"];
       };
     };
   };
@@ -386,6 +400,11 @@ export interface operations {
         id: number;
       };
     };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateDangerZoneDto"];
+      };
+    };
     responses: {
       200: {
         content: {
@@ -393,12 +412,15 @@ export interface operations {
         };
       };
     };
+  };
+  AutomationController_run: {
     requestBody: {
       content: {
-        "application/json": components["schemas"]["UpdateDangerZoneDto"];
+        "application/json": components["schemas"]["CreateAutomationDto"];
       };
+    };
+    responses: {
+      201: never;
     };
   };
 }
-
-export interface external {}

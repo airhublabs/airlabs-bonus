@@ -122,6 +122,7 @@ export class ReportsService {
         },
       },
     });
+
     const dangerZones = await this.prisma.dangerZone.findMany();
 
     return employees.map((employee) => {
@@ -131,7 +132,7 @@ export class ReportsService {
       });
 
       const bonus = new ScanningService({
-        dangerZones: ['EBL', 'DSS'],
+        dangerZones: dangerZones.map((zone) => zone.zone),
         employee: employee,
         previousReports: previousMonthReports,
         reports: currentMonthReports,
@@ -143,10 +144,10 @@ export class ReportsService {
         emp_no: employee.emp_no,
         bonus: days.secruityBonusDays,
         perDiems: days.perDiem,
+        vnoPerDiems: days.vnoPerDiem,
         id: employee.id,
       };
     });
-    return {};
   }
 
   async retrieve(reportId: number) {

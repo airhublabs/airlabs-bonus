@@ -15,7 +15,7 @@ import PageHeader from '../../lib/components/header/PageHeader';
 import EmployeeViewHeader from '../../lib/views/employees/EmployeeViewHeader';
 import MonthSelect, { MonthSelectProps } from '../../lib/views/employees/MonthSelect';
 import { EMPLOYEE_COLUMNS } from '../../lib/views/employees/constants/employee-columns.constant';
-import { transformReports } from '../../lib/views/employees/logic/reports-transform.service';
+import { IBonues, transformReports } from '../../lib/views/employees/logic/reports-transform.service';
 import ReportDialog from '../../lib/views/employees/modals/ReportDialog';
 
 const EmployeeView = () => {
@@ -26,6 +26,7 @@ const EmployeeView = () => {
     perDiemDays: 0,
     vnoPerDiemDays: 0,
     dangerousProjectIds: [],
+    dangersProjectRows: [] as IBonues[],
   });
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [viewingMonth, setViewingMonth] = useState<number>(9);
@@ -71,12 +72,14 @@ const EmployeeView = () => {
     const bonusDays = bonus.runScan();
 
     console.log(bonus.bonusReportRows);
+
     setBonusData({
       secuirtyDays: bonusDays.secruityBonusDays,
       amount: bonusDays.secruityBonusDays * 25.5,
       perDiemDays: bonusDays.perDiem,
       vnoPerDiemDays: bonusDays.vnoPerDiem,
       dangerousProjectIds: bonus.dangerousProjectIds,
+      dangersProjectRows: bonus.bonusReportRows,
     });
   }, [
     employeeQuery.data,
@@ -136,7 +139,8 @@ const EmployeeView = () => {
             rows={
               transformReports(
                 aggergateReportMonths({ currentMonth: viewingMonth, reports: reportsQuery?.data })
-                  .currentMonthReports
+                  .currentMonthReports,
+                bonusData.dangersProjectRows
               ) || []
             }
             columns={EMPLOYEE_COLUMNS}

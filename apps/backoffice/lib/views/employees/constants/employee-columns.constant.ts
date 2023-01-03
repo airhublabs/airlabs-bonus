@@ -63,4 +63,16 @@ export const EMPLOYEE_COLUMNS: GridColDef<ReportsApi.RetriveResponseBody>[] = [
     headerName: 'Most visited',
     description: 'Most visted base in multi-project days',
   },
+  {
+    field: "bonus",
+    headerName: "Security Bonus"
+  },
+  {
+    field: "perDiems",
+    headerName: "Per Diem"
+  },
+  {
+    field: "vnoPerDiems",
+    headerName: "VNO Per Diem"
+  }
 ];

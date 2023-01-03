@@ -1,27 +1,37 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { ReportsApi } from '@airlabs-bonus/types';
-import { Button, TextField } from '@mui/material';
+import { TextField } from '@mui/material';
 import { DataGrid, GridColDef, GridToolbarExport } from '@mui/x-data-grid';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import api from '../lib/api/airlabs.api';
-import { useListDangerZones } from '../lib/api/zones/zones.query';
 import PageHeader from '../lib/components/header/PageHeader';
 import MonthSelect, { MonthSelectProps } from '../lib/views/employees/MonthSelect';
+import { useListDangerZones } from '../lib/api/zones/zones.query';
+import { EMPLOYEE_COLUMNS } from '../lib/views/employees/constants/employee-columns.constant';
 
 const BONUS_REPORTS_COLUMN: GridColDef<ReportsApi.RunBonusReportBody[number]>[] = [
   {
     field: 'emp_no',
+    headerName: 'Emp #',
     renderCell: (params) => <a href={`/employees/${params.row.id}`}>{params.value}</a>,
   },
   {
     field: 'bonus',
+    headerName: 'Bonus',
   },
   {
     field: 'perDiems',
+    headerName: 'Per Diems',
+  },
+  {
+    field: 'vnoPerDiems',
+    headerName: 'VNO Per Diems',
+    width: 140,
   },
   {
     field: 'id',
+    headerName: 'ID',
   },
 ];
 
@@ -41,6 +51,9 @@ const Report = () => {
   const [viewingMonth, setViewingMonth] = useState<number>(9);
   const [filteredBonusDays, setFilteredBonusDays] = useState([]);
   const [filterEmpNo, setFilterEmpNp] = useState('');
+  const [bonusReportColumns, setBonusReportColumn] =
+    useState<GridColDef<ReportsApi.RunBonusReportBody[number]>[]>(BONUS_REPORTS_COLUMN);
+  const dangerZoneQuery = useListDangerZones();
 
   const bonusReportQuery = useRunBonusReport({ month: viewingMonth });
 
@@ -57,6 +70,15 @@ const Report = () => {
       )
     );
   }, [filterEmpNo, bonusReportQuery.data]);
+
+  useEffect(() => {
+    if (!dangerZoneQuery.isSuccess || !dangerZoneQuery.data) return;
+
+    setBonusReportColumn((columns) => [
+      ...BONUS_REPORTS_COLUMN,
+      ...dangerZoneQuery.data.map((d) => ({ field: d.zone, valueFormatter: () => 0 })),
+    ]);
+  }, [dangerZoneQuery.data, dangerZoneQuery.isSuccess]);
 
   return (
     <>
@@ -78,7 +100,7 @@ const Report = () => {
         <div className="data-grid-wrap">
           <DataGrid
             rows={filterEmpNo ? filteredBonusDays : bonusReportQuery?.data || []}
-            columns={BONUS_REPORTS_COLUMN}
+            columns={bonusReportColumns}
             loading={bonusReportQuery.isLoading}
             density="compact"
             initialState={{ columns: { columnVisibilityModel: { id: false } } }}
