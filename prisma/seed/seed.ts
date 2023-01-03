@@ -1,5 +1,6 @@
 /* Seed the databse with the Data given from Airlabs.  */
 import data from '../../apps/api/src/common/helpers/cc_nov-jan.json';
+import sepData from '../../apps/api/src/common/helpers/cc_full.json'
 import { Employee, EmployeeType, Prisma, PrismaClient } from '@prisma/client';
 import { transformRosterDate } from './time-converter';
 import { EMP_DATA, RawEmployee } from '../../apps/api/src/common/helpers/cc_emp';
@@ -29,7 +30,7 @@ interface CabinCrewData {
   }[];
 }
 
-let partialCabinCrewSlice = data['Report'] as unknown as CabinCrewData['Report'];
+let partialCabinCrewSlice = [...data['Report'], ...sepData['Report']] as unknown as CabinCrewData['Report'];
 
 const createEmployees = async () => {
   const getEmpType = (type: RawEmployee['Rank']): EmployeeType => {

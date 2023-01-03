@@ -1,4 +1,4 @@
-import { EmployeeType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { BatchCreateEmployeeDto } from '../dto/batch-create-employee.dto';
 
 export class EmployeeUploadService {
@@ -17,7 +17,10 @@ export class EmployeeUploadService {
       human_resource_brq: 'Adam ',
       human_resource_full_name: 'Adam Ghowiba',
       human_resource_rank: '10321',
-      type: report.EmpType === 'Cabin Crew' ? EmployeeType.ATTENDANT : 'PILOT',
+      agency: "",
+      contract_type: "",
+      employment_type: "",
+      type: "CABIN",
     };
   }
 }
