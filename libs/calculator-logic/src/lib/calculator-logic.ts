@@ -164,13 +164,6 @@ export class ScanningService {
           this.leftHomebaseDate = report.from_date;
         }
 
-        /*
-        If their homebase is VNO & they leave and arrive in the same day.
-        Condtions:
-        - Only if per diem is 0
-        - Must have registration.
-        */
-
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
           const isOnRest =
             report.arr_string === this.params.employee.homebase &&
@@ -191,6 +184,7 @@ export class ScanningService {
             startDate.day === DateTime.fromISO(lastFlightOfDay.to_date).day;
           const flightHasRegistration = !!sameDayFlights.filter((_report) => !!_report.registration)
             .length;
+          const lastFlightHasRegistration = !!lastFlightOfDay.registration;
 
           if (isOnRest && !isMultiDayFlight) return acc;
 
@@ -220,12 +214,22 @@ export class ScanningService {
               isLeavingHomebase &&
               isMultiDayFlight &&
               lastFlightIsHomebase &&
-              (lastFlightIsSameDay || !flightHasRegistration);
+              (lastFlightIsSameDay || !lastFlightHasRegistration);
 
             return notEligble && !flightHasPositioning;
           };
 
           if (isNotEligible()) return acc;
+
+          if (report.id === 14406) {
+            console.log({
+              isLeavingHomebase,
+              lastFlightIsHomebase,
+              flightHasPositioning,
+              flightHasRegistration,
+              flights: sameDayFlights,
+            });
+          }
 
           this.bonusReportRows.push({
             type: 'per_diem',
@@ -254,14 +258,21 @@ export class ScanningService {
           const bonusPay = lStartDate.startOf('day').diff(firstOfMonthDate.startOf('day'), ['day']);
           const bonusPayDays = bonusPay.days + 1;
 
-          /* TODO: Not working */
-          this.bonusReportRows.push({
-            date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
-            id: report.id,
-            locationCode: report.code,
-            locationString: 'unset',
-            type: 'security',
+          const dangerousIds = this.getDangerousIds({
+            dangerousStart: firstOfMonthDate.toISO(),
+            endDate: report.start_date,
           });
+
+          dangerousIds.forEach((id) =>
+            this.bonusReportRows.push({
+              date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+              id: id,
+              locationCode: report.code,
+              locationString: 'unset',
+              type: 'security',
+            })
+          );
+
           acc.secruityBonusDays += bonusPayDays;
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
@@ -288,15 +299,20 @@ export class ScanningService {
                 projectEndDate: dangerousEnd.toISO(),
               }) + 1;
           }
-
-          /* TODO: Not working */
-          this.bonusReportRows.push({
-            date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
-            id: report.id,
-            locationCode: report.code,
-            locationString: 'unset',
-            type: 'security',
+          const dangerousIds = this.getDangerousIds({
+            dangerousStart: dangerousStart,
+            endDate: report.start_date,
           });
+
+          dangerousIds.forEach((id) =>
+            this.bonusReportRows.push({
+              date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+              id: id,
+              locationCode: report.code,
+              locationString: 'unset',
+              type: 'security',
+            })
+          );
 
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;

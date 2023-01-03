@@ -15,7 +15,10 @@ import PageHeader from '../../lib/components/header/PageHeader';
 import EmployeeViewHeader from '../../lib/views/employees/EmployeeViewHeader';
 import MonthSelect, { MonthSelectProps } from '../../lib/views/employees/MonthSelect';
 import { EMPLOYEE_COLUMNS } from '../../lib/views/employees/constants/employee-columns.constant';
-import { IBonues, transformReports } from '../../lib/views/employees/logic/reports-transform.service';
+import {
+  IBonues,
+  transformReports,
+} from '../../lib/views/employees/logic/reports-transform.service';
 import ReportDialog from '../../lib/views/employees/modals/ReportDialog';
 
 const EmployeeView = () => {
@@ -37,7 +40,7 @@ const EmployeeView = () => {
   const employeeQuery = useRetriveEmployee(+employeeId);
 
   const handleUpdateCellData: GridEventListener<'cellEditCommit'> = async (params) => {
-    // @ts-ignore - Ignored due to value exsiting but not knowing type interface.
+    // @ts-ignore - Ignored due to value exsiting but not recongizing type
     if (params.formattedValue === params.value) return;
 
     try {
@@ -63,7 +66,7 @@ const EmployeeView = () => {
     });
 
     const bonus = new ScanningService({
-      dangerZones: ['EBL', 'DSS', 'SNGL3'],
+      dangerZones: dangerZonesQuery.data.map((zone) => zone.zone),
       previousReports: previousMonthReports,
       employee: employeeQuery.data,
       reports: currentMonthReports,

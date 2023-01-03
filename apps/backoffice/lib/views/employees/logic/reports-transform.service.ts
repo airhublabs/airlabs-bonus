@@ -46,22 +46,6 @@ const getMostTimeSpentBase = (params: {
   return startDiff.hours > endDiff ? departureBase : arrivalBase;
 };
 
-const getTimeSpentInBaseHours = (params: {
-  startDate: string;
-  endDate: string;
-  departureBase: string;
-  arrivalBase: string;
-}) => {
-  const { startDate, departureBase, arrivalBase } = params;
-  const lDepartureDate = DateTime.fromISO(startDate);
-  const startOfDate = lDepartureDate.startOf('day');
-  const startDiff = lDepartureDate.diff(startOfDate, ['hour']);
-
-  const endDiffInHours = 24 - startDiff.hours;
-  const startDiffInHours = 24 - startDiff.hours;
-
-  return { [departureBase]: startDiffInHours, [arrivalBase]: endDiffInHours };
-};
 
 const newGetTimeSPentInBase = (reports: ReportsApi.ListResponseBody) => {
   const timeInBases = reports.reduce((acc: Record<string, number>, report, i) => {
