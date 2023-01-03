@@ -68,10 +68,11 @@ Scopes:
 - ZohoCreator.report.READ,ZohoCreator.report.create,ZohoCreator.report.UPDATE,ZohoCreator.form.ALL,ZohoCreator.form.CREATE,ZohoCreator.form.READ
 */
   async getAccessToken() {
-    if (!this.accessToken && !(await zohoConfig.retrive('access_token'))) {
-      console.log('Generating access token');
+    const configAccessToken = await zohoConfig.retrive('access_token');
 
-      const configAccessToken = zohoConfig.retrive('access_token');
+
+    if (!this.accessToken) {
+      console.log('Generating access token');
 
       if (configAccessToken) return configAccessToken;
 
