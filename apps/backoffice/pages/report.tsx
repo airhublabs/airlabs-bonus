@@ -71,14 +71,15 @@ const Report = () => {
     );
   }, [filterEmpNo, bonusReportQuery.data]);
 
-  useEffect(() => {
+  /** @TODO Removed reverting back to old format. (Add back) */
+  /*   useEffect(() => {
     if (!dangerZoneQuery.isSuccess || !dangerZoneQuery.data) return;
 
     setBonusReportColumn((columns) => [
       ...BONUS_REPORTS_COLUMN,
       ...dangerZoneQuery.data.map((d) => ({ field: d.zone, valueFormatter: () => 0 })),
     ]);
-  }, [dangerZoneQuery.data, dangerZoneQuery.isSuccess]);
+  }, [dangerZoneQuery.data, dangerZoneQuery.isSuccess]); */
 
   return (
     <>
