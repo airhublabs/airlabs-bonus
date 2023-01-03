@@ -194,6 +194,7 @@ export class ScanningService {
             report.dep_string === 'VNO' &&
             this.params.employee.homebase === 'VNO' &&
             lastFlightIsHomebase &&
+            lastFlightIsSameDay &&
             (flightHasPositioning || flightHasRegistration)
           ) {
             this.dangerousProjectIds.push(report.id);

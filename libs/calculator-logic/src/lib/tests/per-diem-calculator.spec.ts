@@ -1,16 +1,7 @@
-import { ReportsApi, EmployeesApi } from '@airlabs-bonus/types';
+import { EmployeesApi } from '@airlabs-bonus/types';
 import { DateTime } from 'luxon';
-import { ScanningService } from './calculator-logic';
-import { Console } from 'console';
-
-interface RosterGenerationParams {
-  arr: string;
-  dep: string;
-  from_date: string;
-  to_date: string;
-  code?: string;
-  registration?: string;
-}
+import { ScanningService } from '../calculator-logic';
+import { generateRoster } from '../tests/calculator-tests.utils';
 
 const MOCK_EMP: EmployeesApi.RetriveResponseBody = {
   agency: '',
@@ -22,32 +13,6 @@ const MOCK_EMP: EmployeesApi.RetriveResponseBody = {
   human_resource_full_name: '',
   human_resource_rank: '',
   type: 'CABIN',
-};
-
-const generateRoster = (...params: RosterGenerationParams[]): ReportsApi.ListResponseBody => {
-  return params.map((param, i) => ({
-    arr_string: param.arr,
-    dep_string: param.dep,
-    start_date: param.from_date || DateTime.now().toISO(),
-    from_date: param.from_date || DateTime.now().toISO(),
-    to_date: param.to_date || DateTime.now().toISO(),
-    code: param.code || 'UNSET',
-    employee_id: 0,
-    employeee: {
-      emp_no: 'UN',
-      agency: '',
-      contract_type: '',
-      employment_type: '',
-      homebase: '',
-      human_resource_brq: '',
-      human_resource_full_name: '',
-      human_resource_rank: '',
-      id: 1,
-    },
-    registration: param.registration || '',
-    scheduled_hours_duration: '20:20',
-    id: i,
-  }));
 };
 
 const getReports = () => {
@@ -70,12 +35,6 @@ const getReports = () => {
       from_date: DateTime.now().toISO(),
       to_date: DateTime.now().toISO(),
     }
-    // {
-    //   dep: 'DMO',
-    //   arr: 'DMO',
-    //   from_date: DateTime.now().plus({day: 1}).toISO(),
-    //   to_date: DateTime.now().plus({day: 2}).toISO(),
-    // },
   );
 };
 
@@ -173,15 +132,34 @@ describe('GIVEN A REPORT WITH 1 PER DIEM', () => {
     reports.push(
       ...generateRoster({
         arr: 'DXB',
-        dep: 'DXB',
-        from_date: DateTime.now().toISO(),
-        to_date: DateTime.now().toISO(),
+        dep: 'VNO',
+        from_date: DateTime.now().plus({ day: 3 }).toISO(),
+        to_date: DateTime.now().plus({ day: 3 }).toISO(),
       })
     );
 
-    reports[3].to_date = DateTime.now().plus({ day: 1 }).toISO();
-    reports[3].registration = 'AYT2';
-    reports[3].code = 'POS';
+    const scanner = new ScanningService({
+      dangerZones: [],
+      employee: MOCK_EMP,
+      previousReports: [],
+      reports: reports,
+    });
+
+    const { perDiem } = scanner.runScan();
+
+    expect(perDiem).toBe(1);
+  });
+
+  test(`IS ARRIVING AT HOMEBASE FROM DIFFERENT LOCATION`, () => {
+    const reports = getReports();
+    reports.push(
+      ...generateRoster({
+        arr: 'VNO',
+        dep: 'DXB',
+        from_date: DateTime.now().plus({ day: 3 }).toISO(),
+        to_date: DateTime.now().plus({ day: 3 }).toISO(),
+      })
+    );
 
     const scanner = new ScanningService({
       dangerZones: [],
