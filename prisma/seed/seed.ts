@@ -1,8 +1,8 @@
 /* Seed the databse with the Data given from Airlabs.  */
-import data from '../../apps/api/src/common/helpers/cc_full.json';
-import { Employee, Prisma, PrismaClient } from '@prisma/client';
+import data from '../../apps/api/src/common/helpers/cc_nov-jan.json';
+import { Employee, EmployeeType, Prisma, PrismaClient } from '@prisma/client';
 import { transformRosterDate } from './time-converter';
-import { EMP_DATA } from '../../apps/api/src/common/helpers/cc_emp';
+import { EMP_DATA, RawEmployee } from '../../apps/api/src/common/helpers/cc_emp';
 import { DateTime } from 'luxon';
 
 const prisma = new PrismaClient();
@@ -32,13 +32,23 @@ interface CabinCrewData {
 let partialCabinCrewSlice = data['Report'] as unknown as CabinCrewData['Report'];
 
 const createEmployees = async () => {
+  const getEmpType = (type: RawEmployee['Rank']): EmployeeType => {
+    if (type === 'Senior Cabin Crew' || type === 'Cabin Crew') return 'CABIN';
+
+    return 'FLIGHT';
+  };
+
   await prisma.employee.createMany({
     data: EMP_DATA.map((emp) => ({
       emp_no: emp.EmpNo,
-      homebase: emp.HomeBases,
+      agency: emp.Agency,
+      contract_type: emp['Contract Type'],
+      employment_type: emp['Employment Type'],
+      type: getEmpType(emp.Rank),
+      homebase: emp['Home Base'],
       human_resource_brq: 'Adam',
-      human_resource_full_name: 'Adam Ghowiba',
-      human_resource_rank: '123',
+      human_resource_full_name: `${emp['Name']} ${emp['Surname']}`,
+      human_resource_rank: emp['Rank'],
     })),
   });
 };
@@ -95,6 +105,9 @@ const createReports = async () => {
                 create: {
                   homebase: 'DEFAULT',
                   emp_no: report.EmpNo,
+                  agency: 'DEFAULT',
+                  contract_type: 'DEFAULT',
+                  employment_type: 'DEFAULT',
                   human_resource_brq: report.HumanResourceBRQ,
                   human_resource_full_name: report.HumanResourceFullName,
                   human_resource_rank: report.HumanResourceRank,
@@ -143,6 +156,9 @@ const createReports = async () => {
                       create: {
                         homebase: 'DEFAULT',
                         emp_no: report.EmpNo,
+                        agency: 'DEFAULT',
+                        contract_type: 'DEFAULT',
+                        employment_type: 'DEFAULT',
                         human_resource_brq: report.HumanResourceBRQ,
                         human_resource_full_name: report.HumanResourceFullName,
                         human_resource_rank: report.HumanResourceRank,
@@ -161,86 +177,17 @@ const createReports = async () => {
   );
 };
 
-const seedFromDataNT = async () => {
-  const sortedReports = sortRawReports(partialCabinCrewSlice);
+const createSecurityBonus = async () => {
+  const DANGER_ZONES = ['DSS', 'EBL', 'LOS'];
 
-  sortedReports.map(async (report, i, reports) => {
-    const { fromDate, toDate } = transformRosterDate({ ...report });
-
-    const nextReport = reports?.[i + 1];
-    if (nextReport) {
-      const { fromDate: nextFromDate, toDate: nextToDate } = transformRosterDate(nextReport);
-
-      if (DateTime.fromISO(nextFromDate).day > DateTime.fromISO(fromDate).day + 1) {
-        console.log('Deteced missing date, filling');
-        await prisma.report.create({
-          data: {
-            arr_string: report.ArrString,
-            dep_string: report.DepString,
-            code: 'MISSING FILL',
-            project_name_text: report.ProjectNameText,
-            roster_designators: report.RosterDesignators,
-            registration: report.Registration,
-            vehicle_type: report.VehicleType,
-            start_date: DateTime.fromISO(fromDate).plus({ day: 1 }).toISO(),
-            from_date: DateTime.fromISO(fromDate).plus({ day: 1 }).toISO(),
-            to_date: DateTime.fromISO(fromDate).plus({ day: 1 }).toISO(),
-            scheduled_hours_duration: report.ScheduledHoursDuration,
-            employee: {
-              // connect: {emp_no: report.EmpNo}
-              connectOrCreate: {
-                where: { emp_no: report.EmpNo },
-                create: {
-                  homebase: 'DEFAULT',
-                  emp_no: report.EmpNo,
-                  human_resource_brq: report.HumanResourceBRQ,
-                  human_resource_full_name: report.HumanResourceFullName,
-                  human_resource_rank: report.HumanResourceRank,
-                },
-              },
-            },
-          },
-        });
-        return;
-      }
-    }
-
-    console.log('Seeding report number', i);
-    await prisma.report.create({
-      data: {
-        arr_string: report.ArrString,
-        dep_string: report.DepString,
-        code: report.Code,
-        project_name_text: report.ProjectNameText,
-        roster_designators: report.RosterDesignators,
-        registration: report.Registration,
-        vehicle_type: report.VehicleType,
-        start_date: fromDate,
-        from_date: fromDate,
-        to_date: toDate,
-        scheduled_hours_duration: report.ScheduledHoursDuration,
-        employee: {
-          connect: { emp_no: report.EmpNo },
-          connectOrCreate: {
-            where: { emp_no: report.EmpNo },
-            create: {
-              homebase: 'DEFAULT',
-              emp_no: report.EmpNo,
-              human_resource_brq: report.HumanResourceBRQ,
-              human_resource_full_name: report.HumanResourceFullName,
-              human_resource_rank: report.HumanResourceRank,
-            },
-          },
-        },
-      },
-    });
-  });
+  await prisma.dangerZone.createMany({ data: DANGER_ZONES.map((zone) => ({ zone })) });
 };
 
 const main = async () => {
   try {
     await createEmployees();
     await createReports();
+    await createSecurityBonus();
   } catch (error) {
     console.log('[TDATA] - Failed to seed transfer data', error);
   }

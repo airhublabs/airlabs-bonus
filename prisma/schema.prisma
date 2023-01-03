@@ -11,18 +11,21 @@ datasource db {
 }
 
 enum EmployeeType {
-  PILOT
-  ATTENDANT
+  FLIGHT
+  CABIN
 }
 
 model Employee {
   id                       Int          @id @default(autoincrement())
-  type                     EmployeeType @default(ATTENDANT)
-  emp_no                   String @unique
+  type                     EmployeeType @default(CABIN)
+  emp_no                   String       @unique
   homebase                 String
   human_resource_full_name String
   human_resource_brq       String
   human_resource_rank      String
+  contract_type            String
+  employment_type          String
+  agency                   String
   Report                   Report[]
 }
 
@@ -48,11 +51,11 @@ model Report {
 }
 
 model ZohoIntergration {
-  id Int @id @default(autoincrement())
+  id            Int    @id @default(autoincrement())
   refresh_token String
 }
 
 model DangerZone {
-  id Int @id @default(autoincrement())
+  id   Int    @id @default(autoincrement())
   zone String @unique
 }

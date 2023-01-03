@@ -59,8 +59,10 @@ export class ReportsController {
 
   @ApiOkResponse({ type: BatchGetReportDto, isArray: true })
   @Get('/reports/bonus')
-  runBonusReport(@Query('month', ParseIntPipe) month: number) {
-    return this.reportsService.runReport(month);
+  async runBonusReport(@Query('month', ParseIntPipe) month: number) {
+    const result = await this.reportsService.runReport(month);
+
+    return result;
   }
 
   @Post('reports/batch')

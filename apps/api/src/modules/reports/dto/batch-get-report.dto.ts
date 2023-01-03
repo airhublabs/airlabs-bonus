@@ -12,4 +12,7 @@ export class BatchGetReportDto {
 
   @ApiProperty()
   perDiems!: number;
+
+  @ApiProperty()
+  vnoPerDiems!: number;
 }

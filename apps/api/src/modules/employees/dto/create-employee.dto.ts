@@ -4,6 +4,18 @@ import { IsEnum, IsString } from 'class-validator';
 import { OmitCreateDtoFields } from '../../../types/helpers.type';
 
 export class CreateEmployeeDto implements OmitCreateDtoFields<Employee> {
+  @ApiProperty()
+  @IsString()
+  contract_type!: string;
+
+  @ApiProperty()
+  @IsString()
+  employment_type!: string;
+
+  @ApiProperty()
+  @IsString()
+  agency!: string;
+
   @IsString()
   @ApiProperty()
   emp_no!: string;
@@ -28,4 +40,3 @@ export class CreateEmployeeDto implements OmitCreateDtoFields<Employee> {
   @ApiPropertyOptional({ enum: EmployeeType })
   type!: EmployeeType;
 }
-
