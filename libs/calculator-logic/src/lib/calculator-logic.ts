@@ -254,14 +254,21 @@ export class ScanningService {
           const bonusPay = lStartDate.startOf('day').diff(firstOfMonthDate.startOf('day'), ['day']);
           const bonusPayDays = bonusPay.days + 1;
 
-          /* TODO: Not working */
-          this.bonusReportRows.push({
-            date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
-            id: report.id,
-            locationCode: report.code,
-            locationString: 'unset',
-            type: 'security',
+          const dangerousIds = this.getDangerousIds({
+            dangerousStart: firstOfMonthDate.toISO(),
+            endDate: report.start_date,
           });
+
+          dangerousIds.forEach((id) =>
+            this.bonusReportRows.push({
+              date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+              id: id,
+              locationCode: report.code,
+              locationString: 'unset',
+              type: 'security',
+            })
+          );
+
           acc.secruityBonusDays += bonusPayDays;
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
@@ -288,15 +295,20 @@ export class ScanningService {
                 projectEndDate: dangerousEnd.toISO(),
               }) + 1;
           }
-
-          /* TODO: Not working */
-          this.bonusReportRows.push({
-            date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
-            id: report.id,
-            locationCode: report.code,
-            locationString: 'unset',
-            type: 'security',
+          const dangerousIds = this.getDangerousIds({
+            dangerousStart: dangerousStart,
+            endDate: report.start_date,
           });
+
+          dangerousIds.forEach((id) =>
+            this.bonusReportRows.push({
+              date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+              id: id,
+              locationCode: report.code,
+              locationString: 'unset',
+              type: 'security',
+            })
+          );
 
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
