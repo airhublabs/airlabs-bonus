@@ -184,6 +184,7 @@ export class ScanningService {
             startDate.day === DateTime.fromISO(lastFlightOfDay.to_date).day;
           const flightHasRegistration = !!sameDayFlights.filter((_report) => !!_report.registration)
             .length;
+          const lastFlightHasRegistration = !!lastFlightOfDay.registration;
 
           if (isOnRest && !isMultiDayFlight) return acc;
 
@@ -213,12 +214,22 @@ export class ScanningService {
               isLeavingHomebase &&
               isMultiDayFlight &&
               lastFlightIsHomebase &&
-              (lastFlightIsSameDay || !flightHasRegistration);
+              (lastFlightIsSameDay || !lastFlightHasRegistration);
 
             return notEligble && !flightHasPositioning;
           };
 
           if (isNotEligible()) return acc;
+
+          if (report.id === 14406) {
+            console.log({
+              isLeavingHomebase,
+              lastFlightIsHomebase,
+              flightHasPositioning,
+              flightHasRegistration,
+              flights: sameDayFlights,
+            });
+          }
 
           this.bonusReportRows.push({
             type: 'per_diem',
