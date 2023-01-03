@@ -164,13 +164,6 @@ export class ScanningService {
           this.leftHomebaseDate = report.from_date;
         }
 
-        /*
-        If their homebase is VNO & they leave and arrive in the same day.
-        Condtions:
-        - Only if per diem is 0
-        - Must have registration.
-        */
-
         if (this.isNotInHomebase(report) && lastScannedDay !== startDate.day) {
           const isOnRest =
             report.arr_string === this.params.employee.homebase &&
