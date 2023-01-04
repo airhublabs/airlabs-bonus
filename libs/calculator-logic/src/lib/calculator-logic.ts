@@ -185,6 +185,15 @@ export class ScanningService {
           const flightHasRegistration = !!sameDayFlights.filter((_report) => !!_report.registration)
             .length;
           const lastFlightHasRegistration = !!lastFlightOfDay.registration;
+          const flightsWithRegistration = sameDayFlights.filter(
+            (_report) => !!_report.registration
+          );
+          const lastFlightWithRegistration =
+            flightsWithRegistration[flightsWithRegistration.length - 1];
+          const lastFlightWithRegistrationIsSameDay =
+            DateTime.fromISO(lastFlightWithRegistration?.to_date).day === startDate.day;
+
+          console.log({ flightsWithRegistration, id: report.id, lastFlightWithRegistration });
 
           if (isOnRest && !isMultiDayFlight) return acc;
 
@@ -194,7 +203,7 @@ export class ScanningService {
             report.dep_string === 'VNO' &&
             this.params.employee.homebase === 'VNO' &&
             lastFlightIsHomebase &&
-            lastFlightIsSameDay &&
+            lastFlightWithRegistrationIsSameDay &&
             (flightHasPositioning || flightHasRegistration)
           ) {
             this.dangerousProjectIds.push(report.id);
