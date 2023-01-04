@@ -190,7 +190,12 @@ const EmployeeView = () => {
               background-color: rgba(255, 0, 0, 0.053);
             }
           }
+
+          :global(.MuiDataGrid-row):hover {
+            background-color: rgba(94, 90, 90, 0.023);
+          }
         }
+
       `}</style>
     </>
   );

@@ -1,3 +1,4 @@
+/* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { EmployeesApi } from '@airlabs-bonus/types';
 import { DateTime } from 'luxon';
 import { ScanningService } from '../calculator-logic';
@@ -34,6 +35,30 @@ const getReports = () => {
       arr: 'VNO',
       from_date: DateTime.now().toISO(),
       to_date: DateTime.now().toISO(),
+    }
+  );
+};
+
+const getMultiDayMidnightReport = () => {
+  return generateRoster(
+    {
+      dep: 'LOS',
+      arr: 'LOS',
+      from_date: DateTime.now().toISO(),
+      to_date: DateTime.now().toISO(),
+    },
+    {
+      dep: 'LOS',
+      arr: 'VNO',
+      code: 'POS',
+      from_date: DateTime.now().toISO(),
+      to_date: DateTime.now().plus({ day: 1 }).toISO(),
+    },
+    {
+      dep: 'VNO',
+      arr: 'VNO',
+      from_date: DateTime.now().plus({ day: 1 }).toISO(),
+      to_date: DateTime.now().plus({ day: 2 }).toISO(),
     }
   );
 };
@@ -104,6 +129,24 @@ describe('GIVEN A REPORT WITH 1 PER DIEM', () => {
     const { perDiem } = scanner.runScan();
 
     expect(perDiem).toBe(1);
+  });
+
+  /* TODO: Build from EXAMPLE AT ALX DECEMBER ON 12th-13th */
+  test(`MULTI DAY MIDNIGHT CASE WHERE NEXT DAY IS OFF`, () => {
+    const reports = getMultiDayMidnightReport();
+
+    console.log(reports);
+
+    const scanner = new ScanningService({
+      dangerZones: [],
+      employee: MOCK_EMP,
+      previousReports: [],
+      reports: reports,
+    });
+
+    const { perDiem } = scanner.runScan();
+
+    expect(perDiem).toBe(2);
   });
 
   test(`ENDS NOT AT HOMEBASE & SAME DAY`, () => {

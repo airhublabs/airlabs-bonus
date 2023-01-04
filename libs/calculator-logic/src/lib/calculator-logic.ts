@@ -1,5 +1,6 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { EmployeesApi, ReportsApi } from '@airlabs-bonus/types';
+import { Console } from 'console';
 import { DateTime } from 'luxon';
 
 interface ScanningServiceParams {
@@ -160,6 +161,10 @@ export class ScanningService {
       (acc, report, i, reports) => {
         const startDate = DateTime.fromISO(report.start_date);
 
+        if (this.isDangerousProject(report)) {
+          this.isAssignedDangerousProject = true;
+        }
+
         if (this.isLeavingHomebase(report) && !this.leftHomebaseDate) {
           this.leftHomebaseDate = report.from_date;
         }
@@ -185,7 +190,21 @@ export class ScanningService {
           const flightHasRegistration = !!sameDayFlights.filter((_report) => !!_report.registration)
             .length;
           const lastFlightHasRegistration = !!lastFlightOfDay.registration;
+          const flightsWithRegistration = sameDayFlights.filter(
+            (_report) => !!_report.registration
+          );
+          const lastFlightWithRegistration =
+            flightsWithRegistration[flightsWithRegistration.length - 1];
+          const lastFlightWithRegistrationIsSameDay =
+            DateTime.fromISO(lastFlightWithRegistration?.to_date).day === startDate.day;
+          const noneRestFlights = sameDayFlights.filter(
+            (_report) =>
+              _report.arr_string !== this.params.employee.homebase ||
+              _report.dep_string !== this.params.employee.homebase
+          );
+          const lastNoneRestFlight = noneRestFlights[noneRestFlights.length - 1];
 
+          /* If it's a rest day no VNO Per Diem or Per Diem will be added */
           if (isOnRest && !isMultiDayFlight) return acc;
 
           /* VNO Per Diem */
@@ -194,10 +213,9 @@ export class ScanningService {
             report.dep_string === 'VNO' &&
             this.params.employee.homebase === 'VNO' &&
             lastFlightIsHomebase &&
-            lastFlightIsSameDay &&
+            lastFlightWithRegistrationIsSameDay &&
             (flightHasPositioning || flightHasRegistration)
           ) {
-            this.dangerousProjectIds.push(report.id);
             acc.vnoPerDiem += 1;
 
             this.bonusReportRows.push({
@@ -220,6 +238,17 @@ export class ScanningService {
             return notEligble && !flightHasPositioning;
           };
 
+          /* Is Same Day flights */
+          const isNotEligibleSingleDay = () => {
+            const notEligble =
+              isLeavingHomebase &&
+              lastFlightIsHomebase &&
+              (lastFlightIsSameDay || !lastFlightHasRegistration);
+
+            return notEligble && !flightHasPositioning;
+          };
+
+          /* PER DIEM */
           if (!isNotEligible()) {
             this.bonusReportRows.push({
               type: 'per_diem',
@@ -230,7 +259,60 @@ export class ScanningService {
             });
 
             acc.perDiem += 1;
+            this.dangerousProjectIds.push(report.id);
+
+            /* Midnight check when next day is off */
+            if (
+              DateTime.fromISO(lastNoneRestFlight?.to_date).day === startDate.day + 1 &&
+              reports[i + sameDayFlights.length] &&
+              reports[i + sameDayFlights.length]?.dep_string === this.params.employee.homebase &&
+              reports[i + sameDayFlights.length]?.arr_string === this.params.employee.homebase
+            ) {
+              this.bonusReportRows.push({
+                type: 'per_diem',
+                date: DateTime.fromISO(reports?.[i + sameDayFlights.length].from_date).toFormat(
+                  'dd-MM-yy'
+                ),
+                locationCode: '',
+                locationString: 'not set',
+                id: reports?.[i + sameDayFlights.length].id,
+              });
+
+              this.dangerousProjectIds.push(reports?.[i + sameDayFlights.length].id);
+
+              acc.perDiem += 1;
+            }
           }
+
+          /* Single day per diem midnight check */
+          /* May not be needed as the above check is also checking single day flights */
+          /*           if (
+            !isNotEligibleSingleDay() &&
+            DateTime.fromISO(report.to_date).day == startDate.day + 1 &&
+            reports[i + 1] &&
+            reports[i + 1]?.dep_string === this.params.employee.homebase &&
+            reports[i + 1]?.arr_string === this.params.employee.homebase
+          ) {
+            acc.perDiem += 1;
+
+            console.log({
+              id: report.id,
+              isOnRest,
+              arr: report.arr_string,
+              dep: report.dep_string,
+              lastFlight: DateTime.fromISO(lastNoneRestFlight?.to_date).day,
+              start: startDate.day + 1,
+            });
+
+            this.bonusReportRows.push({
+              type: 'per_diem',
+              id: reports?.[i + 1].id,
+              date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+              locationCode: '',
+              locationString: 'not set',
+            });
+            this.dangerousProjectIds.push(report.id);
+          } */
         }
 
         /* Arrivng with previous dangerous project */
@@ -254,16 +336,16 @@ export class ScanningService {
             endDate: report.start_date,
           });
 
-          /*** @todo Possible isse being caused  */
-          dangerousIds.forEach((id) =>
+          /*** @todo Adding all reports not just the day  */
+          dangerousIds.forEach((id) => {
             this.bonusReportRows.push({
               date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
               id: id,
               locationCode: report.code,
               locationString: 'unset',
               type: 'security',
-            })
-          );
+            });
+          });
 
           acc.secruityBonusDays += bonusPayDays;
           this.leftHomebaseDate = undefined;
@@ -296,15 +378,16 @@ export class ScanningService {
             endDate: report.start_date,
           });
 
-          dangerousIds.forEach((id) =>
+          dangerousIds.forEach((id) => {
             this.bonusReportRows.push({
               date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
               id: id,
               locationCode: report.code,
               locationString: 'unset',
               type: 'security',
-            })
-          );
+            });
+            this.dangerousProjectIds.push(id);
+          });
 
           this.leftHomebaseDate = undefined;
           this.isAssignedDangerousProject = false;
