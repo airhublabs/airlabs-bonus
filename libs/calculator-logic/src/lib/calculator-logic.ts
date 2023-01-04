@@ -263,10 +263,10 @@ export class ScanningService {
 
             /* Midnight check when next day is off */
             if (
-              (DateTime.fromISO(lastNoneRestFlight?.to_date).day === startDate.day + 1,
+              DateTime.fromISO(lastNoneRestFlight?.to_date).day === startDate.day + 1 &&
               reports[i + sameDayFlights.length] &&
-                reports[i + sameDayFlights.length]?.dep_string === this.params.employee.homebase &&
-                reports[i + sameDayFlights.length]?.arr_string === this.params.employee.homebase)
+              reports[i + sameDayFlights.length]?.dep_string === this.params.employee.homebase &&
+              reports[i + sameDayFlights.length]?.arr_string === this.params.employee.homebase
             ) {
               this.bonusReportRows.push({
                 type: 'per_diem',
@@ -278,21 +278,15 @@ export class ScanningService {
                 id: reports?.[i + sameDayFlights.length].id,
               });
 
-              console.log({
-                id: report.id,
-                isOnRest,
-                arr: report.arr_string,
-                dep: report.dep_string,
-              });
-
               this.dangerousProjectIds.push(reports?.[i + sameDayFlights.length].id);
 
               acc.perDiem += 1;
             }
           }
 
-          /* Single day per diem */
-          if (
+          /* Single day per diem midnight check */
+          /* May not be needed as the above check is also checking single day flights */
+          /*           if (
             !isNotEligibleSingleDay() &&
             DateTime.fromISO(report.to_date).day == startDate.day + 1 &&
             reports[i + 1] &&
@@ -300,6 +294,15 @@ export class ScanningService {
             reports[i + 1]?.arr_string === this.params.employee.homebase
           ) {
             acc.perDiem += 1;
+
+            console.log({
+              id: report.id,
+              isOnRest,
+              arr: report.arr_string,
+              dep: report.dep_string,
+              lastFlight: DateTime.fromISO(lastNoneRestFlight?.to_date).day,
+              start: startDate.day + 1,
+            });
 
             this.bonusReportRows.push({
               type: 'per_diem',
@@ -309,7 +312,7 @@ export class ScanningService {
               locationString: 'not set',
             });
             this.dangerousProjectIds.push(report.id);
-          }
+          } */
         }
 
         /* Arrivng with previous dangerous project */
@@ -333,7 +336,7 @@ export class ScanningService {
             endDate: report.start_date,
           });
 
-          /*** @todo Possible isse being caused  */
+          /*** @todo Adding all reports not just the day  */
           dangerousIds.forEach((id) => {
             this.bonusReportRows.push({
               date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),

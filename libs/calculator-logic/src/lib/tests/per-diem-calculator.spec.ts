@@ -1,8 +1,8 @@
+/* eslint-disable @nrwl/nx/enforce-module-boundaries */
 import { EmployeesApi } from '@airlabs-bonus/types';
 import { DateTime } from 'luxon';
 import { ScanningService } from '../calculator-logic';
 import { generateRoster } from '../tests/calculator-tests.utils';
-import { Reports } from 'libs/data-access/src/lib/modules/reports.access';
 
 const MOCK_EMP: EmployeesApi.RetriveResponseBody = {
   agency: '',
@@ -50,15 +50,15 @@ const getMultiDayMidnightReport = () => {
     {
       dep: 'LOS',
       arr: 'VNO',
-      code: "POS",
+      code: 'POS',
       from_date: DateTime.now().toISO(),
-      to_date: DateTime.now().plus({day: 1}).toISO(),
+      to_date: DateTime.now().plus({ day: 1 }).toISO(),
     },
     {
       dep: 'VNO',
       arr: 'VNO',
-      from_date: DateTime.now().plus({day: 1}).toISO(),
-      to_date: DateTime.now().plus({day: 2}).toISO(),
+      from_date: DateTime.now().plus({ day: 1 }).toISO(),
+      to_date: DateTime.now().plus({ day: 2 }).toISO(),
     }
   );
 };
