@@ -194,6 +194,7 @@ export class ScanningService {
             report.dep_string === 'VNO' &&
             this.params.employee.homebase === 'VNO' &&
             lastFlightIsHomebase &&
+            lastFlightIsSameDay &&
             (flightHasPositioning || flightHasRegistration)
           ) {
             this.dangerousProjectIds.push(report.id);
@@ -201,10 +202,10 @@ export class ScanningService {
 
             this.bonusReportRows.push({
               type: 'vno_per_diem',
+              id: report.id,
               date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
               locationCode: '',
               locationString: 'not set',
-              id: report.id,
             });
           }
 
@@ -219,27 +220,17 @@ export class ScanningService {
             return notEligble && !flightHasPositioning;
           };
 
-          if (isNotEligible()) return acc;
-
-          if (report.id === 14406) {
-            console.log({
-              isLeavingHomebase,
-              lastFlightIsHomebase,
-              flightHasPositioning,
-              flightHasRegistration,
-              flights: sameDayFlights,
+          if (!isNotEligible()) {
+            this.bonusReportRows.push({
+              type: 'per_diem',
+              date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
+              locationCode: '',
+              locationString: 'not set',
+              id: report.id,
             });
+
+            acc.perDiem += 1;
           }
-
-          this.bonusReportRows.push({
-            type: 'per_diem',
-            date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
-            locationCode: '',
-            locationString: 'not set',
-            id: report.id,
-          });
-
-          acc.perDiem += 1;
         }
 
         /* Arrivng with previous dangerous project */
@@ -263,6 +254,7 @@ export class ScanningService {
             endDate: report.start_date,
           });
 
+          /*** @todo Possible isse being caused  */
           dangerousIds.forEach((id) =>
             this.bonusReportRows.push({
               date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
