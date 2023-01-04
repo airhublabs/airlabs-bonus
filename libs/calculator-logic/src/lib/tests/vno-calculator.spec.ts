@@ -89,7 +89,7 @@ describe('GIVEN A REPORT WITH NO VNO PER DIEMS', () => {
   });
 });
 
-describe('GIVEN A REPORT WITH 1 PER DIEM', () => {
+describe('GIVEN A REPORT WITH 1 VNO PER DIEM', () => {
   test('IS SAME DAY & HAS REGISTRATION', () => {
     const reports = getReports();
     reports[2].registration = 'AYT2';

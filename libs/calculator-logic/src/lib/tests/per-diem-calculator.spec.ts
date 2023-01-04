@@ -39,14 +39,9 @@ const getReports = () => {
 };
 
 describe('GIVEN A REPORT WITH NO PER DIEMS', () => {
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
   test('IS SAME DAY & HAS REGISTRATION', () => {
     const reports = getReports();
     reports[2].registration = 'AYT2';
-    reports[2].code = 'ADAM IS COOLS';
 
     const scanner = new ScanningService({
       dangerZones: [],
