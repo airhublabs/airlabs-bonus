@@ -160,7 +160,6 @@ export class ScanningService {
     return this.params.reports.reduce(
       (acc, report, i, reports) => {
         const startDate = DateTime.fromISO(report.start_date);
-        let receivedPerDiem = false;
 
         if (this.isDangerousProject(report)) {
           this.isAssignedDangerousProject = true;
@@ -198,13 +197,14 @@ export class ScanningService {
             flightsWithRegistration[flightsWithRegistration.length - 1];
           const lastFlightWithRegistrationIsSameDay =
             DateTime.fromISO(lastFlightWithRegistration?.to_date).day === startDate.day;
-          const noneRestFlights = reports.filter(
+          const noneRestFlights = sameDayFlights.filter(
             (_report) =>
-              _report.arr_string === this.params.employee.homebase &&
-              _report.dep_string === this.params.employee.homebase
+              _report.arr_string !== this.params.employee.homebase ||
+              _report.dep_string !== this.params.employee.homebase
           );
           const lastNoneRestFlight = noneRestFlights[noneRestFlights.length - 1];
 
+          /* If it's a rest day no VNO Per Diem or Per Diem will be added */
           if (isOnRest && !isMultiDayFlight) return acc;
 
           /* VNO Per Diem */
@@ -261,30 +261,34 @@ export class ScanningService {
             acc.perDiem += 1;
             this.dangerousProjectIds.push(report.id);
 
-            receivedPerDiem = true;
-          }
+            /* Midnight check when next day is off */
+            if (
+              (DateTime.fromISO(lastNoneRestFlight?.to_date).day === startDate.day + 1,
+              reports[i + sameDayFlights.length] &&
+                reports[i + sameDayFlights.length]?.dep_string === this.params.employee.homebase &&
+                reports[i + sameDayFlights.length]?.arr_string === this.params.employee.homebase)
+            ) {
+              this.bonusReportRows.push({
+                type: 'per_diem',
+                date: DateTime.fromISO(reports?.[i + sameDayFlights.length].from_date).toFormat(
+                  'dd-MM-yy'
+                ),
+                locationCode: '',
+                locationString: 'not set',
+                id: reports?.[i + sameDayFlights.length].id,
+              });
 
-          /* Midnight check when next day is off */
-          if (
-            receivedPerDiem &&
-            isMultiDayFlight &&
-            DateTime.fromISO(lastNoneRestFlight?.to_date).day === startDate.day + 1 &&
-            reports[i + sameDayFlights.length + 1] &&
-            reports[i + sameDayFlights.length + 1]?.dep_string === this.params.employee.homebase &&
-            reports[i + sameDayFlights.length + 1]?.arr_string === this.params.employee.homebase
-          ) {
-            this.bonusReportRows.push({
-              type: 'per_diem',
-              date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
-              locationCode: '',
-              locationString: 'not set',
-              id: reports?.[i + 1].id,
-            });
+              console.log({
+                id: report.id,
+                isOnRest,
+                arr: report.arr_string,
+                dep: report.dep_string,
+              });
 
-            this.dangerousProjectIds.push(reports?.[i + 1].id);
-            console.log(report.id);
+              this.dangerousProjectIds.push(reports?.[i + sameDayFlights.length].id);
 
-            acc.perDiem += 1;
+              acc.perDiem += 1;
+            }
           }
 
           /* Single day per diem */
@@ -298,7 +302,7 @@ export class ScanningService {
             acc.perDiem += 1;
 
             this.bonusReportRows.push({
-              type: 'vno_per_diem',
+              type: 'per_diem',
               id: reports?.[i + 1].id,
               date: DateTime.fromISO(report.start_date).toFormat('dd-MM-yy'),
               locationCode: '',
@@ -338,7 +342,6 @@ export class ScanningService {
               locationString: 'unset',
               type: 'security',
             });
-            this.dangerousProjectIds.push(id);
           });
 
           acc.secruityBonusDays += bonusPayDays;

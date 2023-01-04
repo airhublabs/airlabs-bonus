@@ -2,6 +2,7 @@ import { EmployeesApi } from '@airlabs-bonus/types';
 import { DateTime } from 'luxon';
 import { ScanningService } from '../calculator-logic';
 import { generateRoster } from '../tests/calculator-tests.utils';
+import { Reports } from 'libs/data-access/src/lib/modules/reports.access';
 
 const MOCK_EMP: EmployeesApi.RetriveResponseBody = {
   agency: '',
@@ -56,8 +57,8 @@ const getMultiDayMidnightReport = () => {
     {
       dep: 'VNO',
       arr: 'VNO',
-      from_date: DateTime.now().plus({day: 2}).toISO(),
-      to_date: DateTime.now().plus({day: 3}).toISO(),
+      from_date: DateTime.now().plus({day: 1}).toISO(),
+      to_date: DateTime.now().plus({day: 2}).toISO(),
     }
   );
 };
@@ -133,6 +134,8 @@ describe('GIVEN A REPORT WITH 1 PER DIEM', () => {
   /* TODO: Build from EXAMPLE AT ALX DECEMBER ON 12th-13th */
   test(`MULTI DAY MIDNIGHT CASE WHERE NEXT DAY IS OFF`, () => {
     const reports = getMultiDayMidnightReport();
+
+    console.log(reports);
 
     const scanner = new ScanningService({
       dangerZones: [],
