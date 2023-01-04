@@ -68,8 +68,6 @@ describe('GIVEN A REPORT WITH NO VNO PER DIEMS', () => {
     reports[2].to_date = DateTime.now().plus({ day: 1 }).toISO();
     reports[2].registration = 'AYT2A';
 
-    console.log(reports)
-
     const scanner = new ScanningService({
       dangerZones: [],
       employee: MOCK_EMP,

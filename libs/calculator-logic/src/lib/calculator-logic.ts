@@ -287,6 +287,7 @@ export class ScanningService {
             acc.perDiem += 1;
           }
 
+          /* Single day per diem */
           if (
             !isNotEligibleSingleDay() &&
             DateTime.fromISO(report.to_date).day == startDate.day + 1 &&

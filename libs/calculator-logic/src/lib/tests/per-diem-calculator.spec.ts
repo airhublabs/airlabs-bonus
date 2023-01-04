@@ -38,6 +38,30 @@ const getReports = () => {
   );
 };
 
+const getMultiDayMidnightReport = () => {
+  return generateRoster(
+    {
+      dep: 'LOS',
+      arr: 'LOS',
+      from_date: DateTime.now().toISO(),
+      to_date: DateTime.now().toISO(),
+    },
+    {
+      dep: 'LOS',
+      arr: 'VNO',
+      code: "POS",
+      from_date: DateTime.now().toISO(),
+      to_date: DateTime.now().plus({day: 1}).toISO(),
+    },
+    {
+      dep: 'VNO',
+      arr: 'VNO',
+      from_date: DateTime.now().plus({day: 2}).toISO(),
+      to_date: DateTime.now().plus({day: 3}).toISO(),
+    }
+  );
+};
+
 describe('GIVEN A REPORT WITH NO PER DIEMS', () => {
   test('IS SAME DAY & HAS REGISTRATION', () => {
     const reports = getReports();
@@ -106,11 +130,9 @@ describe('GIVEN A REPORT WITH 1 PER DIEM', () => {
     expect(perDiem).toBe(1);
   });
 
-  /* EXAMPLE AT ALX DECEMBER ON 12th-13th */
-  test(`MIDNIGHT CASE WHERE NEXT DAY IS OFF DAY`, () => {
-    const reports = getReports();
-    reports[2].to_date = DateTime.now().plus({ day: 1 }).toISO();
-    reports[2].registration = 'AYT2';
+  /* TODO: Build from EXAMPLE AT ALX DECEMBER ON 12th-13th */
+  test(`MULTI DAY MIDNIGHT CASE WHERE NEXT DAY IS OFF`, () => {
+    const reports = getMultiDayMidnightReport();
 
     const scanner = new ScanningService({
       dangerZones: [],
@@ -121,7 +143,7 @@ describe('GIVEN A REPORT WITH 1 PER DIEM', () => {
 
     const { perDiem } = scanner.runScan();
 
-    expect(perDiem).toBe(1);
+    expect(perDiem).toBe(2);
   });
 
   test(`ENDS NOT AT HOMEBASE & SAME DAY`, () => {
