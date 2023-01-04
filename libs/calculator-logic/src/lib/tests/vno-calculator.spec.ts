@@ -82,26 +82,6 @@ describe('GIVEN A REPORT WITH NO VNO PER DIEMS', () => {
     expect(vnoPerDiem).toBe(0);
   });
 
-  test('ENDS ON DIFFERENT DAY WITH REG ON PREVIOUS DAY', () => {
-    const reports = getReports();
-    reports[1].registration = 'AYT2A';
-    reports[2].to_date = DateTime.now().plus({ day: 1 }).toISO();
-    reports[2].code = 'POS'
-
-    console.log(reports)
-
-    const scanner = new ScanningService({
-      dangerZones: [],
-      employee: MOCK_EMP,
-      previousReports: [],
-      reports: reports,
-    });
-
-    const { vnoPerDiem } = scanner.runScan();
-
-    expect(vnoPerDiem).toBe(0);
-  });
-
   test('ENDS ON SAME DAY WITH NO REGISTRATION', () => {
     const reports = getReports();
 

@@ -106,6 +106,24 @@ describe('GIVEN A REPORT WITH 1 PER DIEM', () => {
     expect(perDiem).toBe(1);
   });
 
+  /* EXAMPLE AT ALX DECEMBER ON 12th-13th */
+  test(`MIDNIGHT CASE WHERE NEXT DAY IS OFF DAY`, () => {
+    const reports = getReports();
+    reports[2].to_date = DateTime.now().plus({ day: 1 }).toISO();
+    reports[2].registration = 'AYT2';
+
+    const scanner = new ScanningService({
+      dangerZones: [],
+      employee: MOCK_EMP,
+      previousReports: [],
+      reports: reports,
+    });
+
+    const { perDiem } = scanner.runScan();
+
+    expect(perDiem).toBe(1);
+  });
+
   test(`ENDS NOT AT HOMEBASE & SAME DAY`, () => {
     const reports = getReports();
     reports[2].arr_string = 'DXO';
