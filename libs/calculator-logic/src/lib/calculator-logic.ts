@@ -239,7 +239,8 @@ export class ScanningService {
           };
 
           /* Is Same Day flights */
-          const isNotEligibleSingleDay = () => {
+          /***  @todo remove unsued code once it's not needed */
+          /*           const isNotEligibleSingleDay = () => {
             const notEligble =
               isLeavingHomebase &&
               lastFlightIsHomebase &&
@@ -247,7 +248,7 @@ export class ScanningService {
 
             return notEligble && !flightHasPositioning;
           };
-
+ */
           /* PER DIEM */
           if (!isNotEligible()) {
             this.bonusReportRows.push({
